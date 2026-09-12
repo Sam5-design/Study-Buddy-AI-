@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const passport = require('./config/passport');
 const connectDB = require('./config/db');
-
+const studyPlanRoutes = require('./routes/studyPlan');
 const app = express();
 
 connectDB();
@@ -32,6 +32,8 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
   res.render('auth/register');
 });
+
+app.use('/api/study-plan', studyPlanRoutes);
 
 // 404 handler for routes that don't exist
 app.use((req, res) => {
