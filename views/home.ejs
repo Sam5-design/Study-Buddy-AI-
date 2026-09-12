@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Study Buddy turns your subjects, tasks, deadlines, and available time into a weekly study plan."
+    />
+    <title>Study Buddy — Study smarter. Stay on track.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23df6d60'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-size='36' fill='white'%3E✦%3C/text%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav" aria-label="Main navigation">
+        <div class="container nav-inner">
+          <a class="brand" href="#home" aria-label="Study Buddy home">
+            <span class="brand-mark" aria-hidden="true">✦</span>
+            <span>Study<span>Buddy</span></span>
+          </a>
+          <button
+            class="sidenav-trigger menu-button"
+            data-target="mobile-navigation"
+            aria-label="Open navigation menu"
+            type="button"
+          >
+            <span></span><span></span><span></span>
+          </button>
+          <div class="desktop-links">
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#preview">Preview</a>
+            <a class="text-action" href="/login">Login</a>
+            <a class="button button-small" href="/register">Get Started <span aria-hidden="true">→</span></a>
+          </div>
+        </div>
+      </nav>
+      <ul class="sidenav" id="mobile-navigation">
+        <li class="mobile-brand"><a href="#home" class="brand"><span class="brand-mark" aria-hidden="true">✦</span><span>Study<span>Buddy</span></span></a></li>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#preview">Preview</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register" class="button mobile-cta">Get Started <span aria-hidden="true">→</span></a></li>
+      </ul>
+    </header>
+
+    <main>
+      <section class="hero section-pad" id="home">
+        <div class="container hero-grid">
+          <div class="hero-copy reveal">
+            <p class="eyebrow"><span aria-hidden="true">✧</span> A calmer semester starts here</p>
+            <h1>Study smarter.<br /><em>Stay on track.</em></h1>
+            <p class="hero-lede">
+              Turn your subjects, deadlines, tasks, and available time into a weekly study plan you can actually act on.
+            </p>
+            <div class="hero-actions">
+              <a class="button" href="/register">Get Started <span aria-hidden="true">→</span></a>
+              <a class="text-link" href="#how-it-works">See how it works <span aria-hidden="true">↘</span></a>
+            </div>
+            <div class="social-proof" aria-label="Study Buddy is designed with students">
+              <div class="avatar-stack"><span>AM</span><span>JT</span><span>LS</span></div>
+              <span>Made for real student schedules</span>
+            </div>
+          </div>
+
+          <div class="hero-preview reveal reveal-delay-1" aria-label="Example Study Buddy weekly schedule">
+            <div class="float-label label-top"><span class="spark">✦</span> Small steps count.</div>
+            <div class="planner-card">
+              <div class="planner-heading">
+                <div><p class="mini-label">This week</p><h2>A week that fits.</h2></div>
+                <span class="hours-pill"><span aria-hidden="true">✦</span> 10.5 hrs planned</span>
+              </div>
+              <div class="day-picker" role="tablist" aria-label="Choose a day">
+                <button class="day is-active" role="tab" aria-selected="true" data-day="Monday"><small>Mon</small><strong>14</strong><i></i></button>
+                <button class="day" role="tab" aria-selected="false" data-day="Tuesday"><small>Tue</small><strong>15</strong><i></i></button>
+                <button class="day" role="tab" aria-selected="false" data-day="Wednesday"><small>Wed</small><strong>16</strong><i></i></button>
+                <button class="day" role="tab" aria-selected="false" data-day="Thursday"><small>Thu</small><strong>17</strong><i></i></button>
+                <button class="day" role="tab" aria-selected="false" data-day="Friday"><small>Fri</small><strong>18</strong><i></i></button>
+                <button class="day" role="tab" aria-selected="false" data-day="Saturday"><small>Sat</small><strong>19</strong><i></i></button>
+                <button class="day" role="tab" aria-selected="false" data-day="Sunday"><small>Sun</small><strong>20</strong><i></i></button>
+              </div>
+              <div class="planner-day-heading"><span id="hero-day-name">Monday</span><strong id="hero-day-hours">1.5h of focused time</strong><span>◷ &nbsp;6–9 PM</span></div>
+              <div class="session-list">
+                <div class="session session-coral"><span class="session-line"></span><div><strong id="hero-session-title">Read Ch. 04 notes</strong><small>6:00 PM · SIT725</small></div><span class="session-status">✓</span></div>
+                <div class="session session-sage"><span class="session-line"></span><div><strong id="hero-open-title">Dinner + reset</strong><small>7:45 PM · Free time</small></div><span class="open-tag">open</span></div>
+              </div>
+              <div class="progress-row"><div><p class="mini-label">Weekly progress</p><div class="progress-track"><span></span></div></div><strong>78%</strong></div>
+            </div>
+            <div class="float-label label-bottom"><span class="check-badge">✓</span><div><strong>Plan feels lighter</strong><small>One week at a time</small></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="statement-band section-pad reveal">
+        <div class="container statement-grid">
+          <p class="eyebrow coral-text">Less mental juggling</p>
+          <h2>Everything you need to keep moving, <em>all in one place.</em></h2>
+          <p>Study Buddy brings the moving pieces of university life together, then gives you a clear next step.</p>
+        </div>
+      </section>
+
+      <section class="features section-pad" id="features">
+        <div class="container">
+          <div class="section-intro reveal"><p class="eyebrow">Built around your real week</p><h2>Make room for the work<br /><em>that matters.</em></h2></div>
+          <div class="feature-grid">
+            <article class="feature-card feature-coral reveal"><span class="feature-number">01</span><div class="feature-icon">▤</div><h3>Organise your subjects</h3><p>Keep your units and subject codes together, so nothing important gets lost in a dozen different places.</p><a href="#preview" class="arrow-link">See your subjects <span aria-hidden="true">↗</span></a></article>
+            <article class="feature-card feature-saffron reveal reveal-delay-1"><span class="feature-number">02</span><div class="feature-icon">✓</div><h3>Track tasks & deadlines</h3><p>Record assignments, assessments, revision, priority, and estimated effort before they become last-minute stress.</p><a href="#preview" class="arrow-link">Track the details <span aria-hidden="true">↗</span></a></article>
+            <article class="feature-card feature-sage reveal reveal-delay-2"><span class="feature-number">03</span><div class="feature-icon">◷</div><h3>Plan around your time</h3><p>Tell Study Buddy when you are actually free—weeknights, weekends, or the small gaps in between.</p><a href="#preview" class="arrow-link">Make time visible <span aria-hidden="true">↗</span></a></article>
+            <article class="feature-card feature-ink reveal reveal-delay-3"><span class="feature-number">04</span><div class="feature-icon">✦</div><h3>Generate your study plan</h3><p>Study Buddy combines your subjects, deadlines, priorities, effort, and availability into a plan that makes sense.</p><a href="#preview" class="arrow-link">Generate your week <span aria-hidden="true">↗</span></a></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="how-it-works section-pad" id="how-it-works">
+        <div class="container">
+          <div class="how-heading reveal"><div><p class="eyebrow">Four simple steps</p><h2>From scattered to <em>sorted.</em></h2></div><p>Start with what you already know. Study Buddy does the organising so you can focus on doing.</p></div>
+          <ol class="steps-list">
+            <li class="step reveal"><span class="step-number">01</span><div class="step-mark">+</div><div><h3>Add your subjects</h3><p>Add the units and subjects you are studying this semester.</p></div></li>
+            <li class="step reveal reveal-delay-1"><span class="step-number">02</span><div class="step-mark">✓</div><div><h3>Add tasks & deadlines</h3><p>Record assignments, assessments, revision tasks, and due dates.</p></div></li>
+            <li class="step reveal reveal-delay-2"><span class="step-number">03</span><div class="step-mark">◷</div><div><h3>Set your available time</h3><p>Choose when you are actually free to study across your week.</p></div></li>
+            <li class="step reveal reveal-delay-3"><span class="step-number">04</span><div class="step-mark">✦</div><div><h3>Generate your study plan</h3><p>Get a weekly schedule built around your life—not an imaginary one.</p></div></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="product-preview section-pad" id="preview">
+        <div class="container">
+          <div class="section-intro centered reveal"><p class="eyebrow">A clearer week, at a glance</p><h2>Your plan, without<br /><em>the guesswork.</em></h2><p>See what is next, what is open, and how close you are to your goals.</p></div>
+          <div class="app-window reveal">
+            <aside class="app-sidebar">
+              <a href="#home" class="app-brand"><span class="brand-mark">✦</span><strong>Study<span>Buddy</span></strong></a>
+              <nav aria-label="Plan preview navigation">
+                <a class="is-active" href="#preview"><span>▦</span> Plan</a><a href="#preview"><span>◈</span> Subjects</a><a href="#preview"><span>✓</span> Tasks</a><a href="#preview"><span>◷</span> Availability</a>
+              </nav>
+              <div class="availability-mini"><p class="mini-label">Your availability</p><strong>Mon–Thu <span>6–9 PM</span></strong><strong>Weekend <span>10 AM–2 PM</span></strong><a href="#get-started">Edit times ↗</a></div>
+            </aside>
+            <div class="app-main">
+              <div class="app-topbar"><div><p class="mini-label">Monday, 14 October 2026</p><h3>Your study plan <span class="status-dot"></span></h3></div><button class="avatar">MS</button></div>
+              <div class="subject-strip"><span class="mini-label">Your subjects</span><div class="subject-chip chip-coral"><i></i>SIT725</div><div class="subject-chip chip-saffron"><i></i>SIT789</div><div class="subject-chip chip-sage"><i></i>SIT728</div></div>
+              <div class="calendar-wrap">
+                <div class="calendar-top"><div><p class="mini-label">This week</p><strong>14 – 20 October</strong></div><button class="outline-button js-plan-toggle" type="button" aria-expanded="false">Show details <span>↓</span></button></div>
+                <div class="calendar-grid">
+                  <div class="calendar-time-column"><span></span><span>5 PM</span><span>6 PM</span><span>7 PM</span><span>8 PM</span><span>9 PM</span></div>
+                  <div class="calendar-day"><b>MON <small>14</small></b><div class="calendar-event coral-event" style="top:28%"><strong>SIT725</strong><span>Assignment</span><small>6:00–7:30 PM</small></div></div>
+                  <div class="calendar-day"><b>TUE <small>15</small></b><div class="calendar-event saffron-event" style="top:45%"><strong>SIT789</strong><span>Revision</span><small>7:00–8:30 PM</small></div></div>
+                  <div class="calendar-day"><b>WED <small>16</small></b><div class="calendar-event sage-event" style="top:18%"><strong>SIT728</strong><span>Draft</span><small>5:00–6:00 PM</small></div></div>
+                  <div class="calendar-day"><b>THU <small>17</small></b><div class="calendar-event ink-event" style="top:38%"><strong>SIT789</strong><span>Lab prep</span><small>6:30–8:00 PM</small></div></div>
+                  <div class="calendar-day"><b>FRI <small>18</small></b><div class="calendar-open" style="top:25%">Free time</div></div>
+                  <div class="calendar-day"><b>SAT <small>19</small></b><div class="calendar-open" style="top:55%">Open</div></div>
+                  <div class="calendar-day"><b>SUN <small>20</small></b><div class="calendar-open" style="top:32%">Open</div></div>
+                </div>
+                <div class="plan-detail" aria-hidden="true"><strong>Plan note</strong><span>Two focused blocks and a protected reset window keep this week achievable.</span></div>
+              </div>
+              <div class="app-summary"><div class="summary-card progress-summary"><div><p class="mini-label">Weekly progress</p><strong>78%</strong><span>3h 45m of 8h planned</span></div><div class="ring-progress"><span>78</span></div></div><div class="summary-card deadline-summary"><p class="mini-label">Next deadline</p><strong>SIT728 <span>· Report draft</span></strong><p>Friday · 2 days remaining</p><div class="deadline-line"><span></span></div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="comparison section-pad">
+        <div class="container">
+          <div class="section-intro centered reveal"><p class="eyebrow">A better way to study</p><h2>Less time planning.<br /><em>More time studying.</em></h2></div>
+          <div class="comparison-grid">
+            <div class="comparison-side without reveal"><div class="comparison-title"><span class="x-mark">×</span><h3>Without a plan</h3><span class="mood-label">Scattered</span></div><div class="scatter-note note-email"><b>Email</b><span>SIT728 report — due sometime Friday?</span></div><div class="scatter-note note-notes"><b>Notes</b><span>Finish SIT725 testing section</span></div><div class="scatter-note note-sticky"><b>Sticky note</b><span>SIT789 revision before lab</span></div><div class="scatter-note note-memory"><b>Memory</b><span>Shift Thursday — no study?</span></div></div>
+            <div class="comparison-divider" aria-hidden="true"><span>→</span></div>
+            <div class="comparison-side with reveal reveal-delay-1"><div class="comparison-title"><span class="check-mark">✓</span><h3>With Study Buddy</h3><span class="mood-label">Sorted</span></div><div class="sorted-list"><div><span class="subject-dot dot-coral"></span><strong>SIT725</strong><span>Assignment</span><time>Mon · 6:00–7:30</time></div><div><span class="subject-dot dot-saffron"></span><strong>SIT789</strong><span>Revision</span><time>Tue · 7:00–8:30</time></div><div><span class="subject-dot dot-sage"></span><strong>SIT728</strong><span>Draft</span><time>Wed · 5:00–6:00</time></div><div><span class="subject-dot dot-ink"></span><strong>SIT789</strong><span>Lab prep</span><time>Thu · 6:30–8:00</time></div></div><div class="planned-total"><span>Planned this week</span><strong>8h 30m</strong></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="final-cta section-pad" id="get-started">
+        <div class="container cta-inner reveal"><p class="eyebrow">Your next week starts here</p><h2>Take control of your<br /><em>study schedule.</em></h2><p>Start with your subjects and build a realistic study routine around your own life. Let Study Buddy handle the organising.</p><div class="hero-actions"><a class="button button-light" href="/register">Get Started <span aria-hidden="true">→</span></a><a class="text-link text-link-light" href="/login">Already have an account? Login</a></div></div>
+      </section>
+    </main>
+
+    <footer class="site-footer" id="login">
+      <div class="container footer-top"><a class="brand" href="#home"><span class="brand-mark" aria-hidden="true">✦</span><span>Study<span>Buddy</span></span></a><p>Built to help students study smarter.</p><div class="footer-links"><a href="#home">Home</a><a href="#features">Features</a><a href="#how-it-works">How It Works</a><a href="#preview">Preview</a><a href="/login">Login</a><a href="/register">Get Started</a></div></div>
+      <div class="container footer-bottom"><span>© 2026 Study Buddy</span><span>Made for your real life.</span></div>
+    </footer>
+
+    <div class="toast-message" role="status" aria-live="polite"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="/js/home.js"></script>
+  </body>
+</html>
