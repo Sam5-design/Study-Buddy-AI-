@@ -1,9 +1,38 @@
 const Task = require('../models/Task');
 const StudyPlan = require('../models/StudyPlan');
 const aiSchedulingEngine = require('../services/aiSchedulingEngine');
+const { buildPlanViewModel } = require('../utils/planViewModel');
 
 /**
- * POST /api/study-plan/generate
+ * GET /study-plan
+ * FR-16: show the student their current plan as a list or calendar view.
+ *
+ * Only ever loads the student's own active plan, so a superseded plan or
+ * another student's plan can't be rendered by guessing an id.
+ */
+async function showStudyPlan(req, res, next) {
+  try {
+    const plan = await StudyPlan.findOne({ user: req.user.id, status: 'active' })
+      .populate('blocks.task', 'description deadline status')
+      .populate('blocks.subject', 'name colour');
+
+    const planView = buildPlanViewModel(plan);
+
+    // 'list' or 'calendar'. Defaults to list. The toggle itself is a
+    // separate card, this just respects the query string if it's there.
+    const requestedView = req.query.view === 'calendar' ? 'calendar' : 'list';
+
+    return res.render('studyPlan/index', {
+      planView,
+      currentView: requestedView,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * POST /study-plan/generate
  * FR-12: generate a day-by-day plan from the student's current tasks,
  * deadlines, effort estimates and available study time.
  *
@@ -74,4 +103,4 @@ async function generateStudyPlan(req, res) {
   }
 }
 
-module.exports = { generateStudyPlan };
+module.exports = { showStudyPlan, generateStudyPlan };
