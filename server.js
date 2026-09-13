@@ -33,7 +33,7 @@ app.get('/register', (req, res) => {
   res.render('auth/register');
 });
 
-app.use('/api/study-plan', studyPlanRoutes);
+app.use('/study-plan', studyPlanRoutes);
 
 // 404 handler for routes that don't exist
 app.use((req, res) => {
