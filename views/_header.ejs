@@ -1,0 +1,11 @@
+<header class="sb-nav">
+  <a href="/planner" class="sb-brand" aria-label="StudyBuddy dashboard">
+    <span class="sb-logo-box">✦</span>
+    <span class="sb-wordmark"><span>Study</span><strong>Buddy</strong></span>
+  </a>
+
+  <div class="sb-user">
+    <span class="sb-avatar">SB</span>
+    <span><%= currentUser && (currentUser.name || currentUser.fullName || currentUser.email) ? (currentUser.name || currentUser.fullName || currentUser.email) : 'User' %></span>
+  </div>
+</header>

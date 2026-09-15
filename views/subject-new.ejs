@@ -1,0 +1,381 @@
+<%- include('_head', { title: 'Create Subject' }) %>
+
+<%- include('_header') %>
+
+<main class="sb-page sb-two-column">
+
+  <!-- ==================================================
+       LEFT SIDE
+       ================================================== -->
+
+  <section class="sb-hero">
+
+    <p class="sb-eyebrow">
+      A CALMER SEMESTER STARTS HERE
+    </p>
+
+    <h1>
+      Start with what<br>
+      you're studying.
+    </h1>
+
+    <p class="sb-copy">
+      Add the subjects you're taking this trimester.
+      We'll use them to organise your tasks and build
+      a study plan around your actual week.
+    </p>
+
+
+    <!-- Progress -->
+
+    <div class="sb-progress-steps">
+
+      <div class="active">
+        <span>01</span>
+        Subject
+      </div>
+
+      <div>
+        <span>02</span>
+        Tasks
+      </div>
+
+      <div>
+        <span>03</span>
+        Study time
+      </div>
+
+    </div>
+
+
+    <!-- Motivational message -->
+
+    <div class="sb-tip mint">
+
+      <strong>
+        ✦ Small steps count.
+      </strong>
+
+      <span>
+        One subject at a time.
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- ==================================================
+       RIGHT SIDE
+       ================================================== -->
+
+  <section class="sb-card sb-form-card">
+
+    <p class="sb-step-label">
+      STEP 1 OF 3
+    </p>
+
+    <h2>
+      Create a subject
+    </h2>
+
+    <p class="sb-muted">
+      Start by adding one of the subjects you're studying.
+    </p>
+
+
+    <!-- ==================================================
+         ERRORS
+         ================================================== -->
+
+    <% if (errors && errors.length > 0) { %>
+
+      <div class="sb-error-box">
+
+        <% errors.forEach((error) => { %>
+
+          <p>
+            <%= error %>
+          </p>
+
+        <% }) %>
+
+      </div>
+
+    <% } %>
+
+
+    <!-- ==================================================
+         SUBJECT FORM
+         ================================================== -->
+
+    <form
+      action="/subjects"
+      method="POST"
+    >
+
+      <!-- Tells controller this request came from EJS -->
+
+      <input
+        type="hidden"
+        name="_web"
+        value="1"
+      >
+
+
+      <!-- Subject name -->
+
+      <div class="input-field">
+
+        <input
+          id="name"
+          name="name"
+          type="text"
+          maxlength="100"
+          value="<%= formData.name || '' %>"
+          required
+        >
+
+        <label
+          for="name"
+          class="<%= formData.name ? 'active' : '' %>"
+        >
+          Subject name
+        </label>
+
+      </div>
+
+
+      <!-- Subject code -->
+
+      <div class="input-field">
+
+        <input
+          id="code"
+          name="code"
+          type="text"
+          maxlength="20"
+          value="<%= formData.code || '' %>"
+          required
+        >
+
+        <label
+          for="code"
+          class="<%= formData.code ? 'active' : '' %>"
+        >
+          Subject code
+        </label>
+
+      </div>
+
+
+      <!-- Trimester -->
+
+      <div class="input-field">
+
+        <select
+          id="trimester"
+          name="trimester"
+          required
+        >
+
+          <option
+            value=""
+            disabled
+            <%= !formData.trimester ? 'selected' : '' %>
+          >
+            Select trimester
+          </option>
+
+          <option
+            value="Trimester 1"
+            <%= formData.trimester === 'Trimester 1'
+              ? 'selected'
+              : '' %>
+          >
+            Trimester 1
+          </option>
+
+          <option
+            value="Trimester 2"
+            <%= formData.trimester === 'Trimester 2'
+              ? 'selected'
+              : '' %>
+          >
+            Trimester 2
+          </option>
+
+          <option
+            value="Trimester 3"
+            <%= formData.trimester === 'Trimester 3'
+              ? 'selected'
+              : '' %>
+          >
+            Trimester 3
+          </option>
+
+        </select>
+
+        <label for="trimester">
+          Trimester
+        </label>
+
+      </div>
+
+
+      <!-- Subject colour -->
+
+      <label class="sb-field-label">
+        Subject colour
+      </label>
+
+      <div
+        class="sb-colour-picker"
+        data-colour-picker
+      >
+
+        <%
+          const colours = [
+            '#E56B61',
+            '#F5D98A',
+            '#DDEBE2',
+            '#172B4D'
+          ];
+
+          const selectedColour =
+            formData.colour || '#E56B61';
+        %>
+
+
+        <% colours.forEach((colour) => { %>
+
+          <button
+            type="button"
+
+            class="sb-colour-dot
+              <%= selectedColour === colour
+                ? 'selected'
+                : '' %>"
+
+            style="--dot: <%= colour %>;"
+
+            data-colour="<%= colour %>"
+
+            aria-label="Select subject colour <%= colour %>"
+          >
+          </button>
+
+        <% }) %>
+
+      </div>
+
+
+      <!-- Stores selected colour -->
+
+      <input
+        type="hidden"
+        id="colour"
+        name="colour"
+        value="<%= selectedColour %>"
+      >
+
+
+      <!-- Submit -->
+
+      <button
+        class="sb-primary-btn sb-full"
+        type="submit"
+      >
+        Create Subject →
+      </button>
+
+    </form>
+
+  </section>
+
+</main>
+
+
+<!-- ==================================================
+     PAGE JS
+     ================================================== -->
+
+<script>
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function () {
+
+    // ----------------------------
+    // Materialize Select
+    // ----------------------------
+
+    const selects =
+      document.querySelectorAll('select');
+
+    if (
+      typeof M !== 'undefined'
+    ) {
+
+      M.FormSelect.init(selects);
+
+    }
+
+
+    // ----------------------------
+    // Colour picker
+    // ----------------------------
+
+    const colourButtons =
+      document.querySelectorAll(
+        '.sb-colour-dot'
+      );
+
+    const colourInput =
+      document.getElementById(
+        'colour'
+      );
+
+
+    colourButtons.forEach(
+      function (button) {
+
+        button.addEventListener(
+          'click',
+          function () {
+
+            // Remove old selection
+            colourButtons.forEach(
+              function (item) {
+
+                item.classList.remove(
+                  'selected'
+                );
+
+              }
+            );
+
+
+            // Select clicked colour
+            button.classList.add(
+              'selected'
+            );
+
+
+            // Store colour in hidden input
+            colourInput.value =
+              button.dataset.colour;
+
+          }
+        );
+
+      }
+    );
+
+  }
+);
+
+</script>
+
+
+<%- include('_footer') %>
