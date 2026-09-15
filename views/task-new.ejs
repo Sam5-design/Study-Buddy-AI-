@@ -1,0 +1,424 @@
+<%- include('_head', { title: 'Add Task' }) %>
+
+<%- include('_header') %>
+
+<main class="sb-page sb-two-column">
+
+  <!-- ==================================================
+       LEFT SIDE
+       ================================================== -->
+
+  <section class="sb-hero">
+
+    <p class="sb-eyebrow">
+      NEXT UP
+    </p>
+
+    <h1>
+      What's coming<br>
+      up next?
+    </h1>
+
+    <p class="sb-copy">
+      Add a deadline and estimated effort.
+      StudyBuddy will use this information
+      to organise your study time.
+    </p>
+
+
+    <!-- Progress -->
+
+    <div class="sb-progress-steps">
+
+      <div class="complete">
+
+        <span>✓</span>
+
+        Subject
+
+      </div>
+
+
+      <div class="active">
+
+        <span>02</span>
+
+        Tasks
+
+      </div>
+
+
+      <div>
+
+        <span>03</span>
+
+        Study time
+
+      </div>
+
+    </div>
+
+
+    <!-- Motivational message -->
+
+    <div class="sb-tip yellow">
+
+      <strong>
+        ✦ You're making progress.
+      </strong>
+
+      <span>
+        A clear deadline makes planning easier.
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- ==================================================
+       RIGHT SIDE
+       ================================================== -->
+
+  <section class="sb-card sb-form-card">
+
+    <p class="sb-step-label">
+      STEP 2 OF 3
+    </p>
+
+
+    <h2>
+      Add a task
+    </h2>
+
+
+    <p class="sb-muted">
+      Tell us what's due and roughly how long you'll need.
+    </p>
+
+
+    <!-- ==================================================
+         ERRORS
+         ================================================== -->
+
+    <% if (errors && errors.length > 0) { %>
+
+      <div class="sb-error-box">
+
+        <% errors.forEach((error) => { %>
+
+          <p>
+            <%= error %>
+          </p>
+
+        <% }) %>
+
+      </div>
+
+    <% } %>
+
+
+    <!-- ==================================================
+         TASK FORM
+         ================================================== -->
+
+    <form
+      action="/subjects/<%= subject._id %>/tasks"
+      method="POST"
+    >
+
+      <!-- Indicates normal browser form -->
+
+      <input
+        type="hidden"
+        name="_web"
+        value="1"
+      >
+
+
+      <!-- Task description / Task name -->
+
+      <div class="input-field">
+
+        <input
+          id="description"
+          name="description"
+          type="text"
+          maxlength="300"
+
+          value="<%= formData.description || '' %>"
+
+          required
+        >
+
+        <label
+          for="description"
+
+          class="<%= formData.description
+            ? 'active'
+            : '' %>"
+        >
+          Task name
+        </label>
+
+      </div>
+
+
+      <!-- ==================================================
+           SUBJECT
+           ==================================================
+
+           We display the subject but don't let
+           the user change it because subjectId
+           already comes from the URL.
+      -->
+
+      <div class="sb-readonly-field">
+
+        <span class="sb-readonly-label">
+          Subject
+        </span>
+
+        <strong>
+          <%= subject.code %>
+          —
+          <%= subject.name %>
+        </strong>
+
+      </div>
+
+
+      <!-- ==================================================
+           DEADLINE + EFFORT
+           ================================================== -->
+
+      <div class="sb-grid-2">
+
+
+        <!-- Deadline -->
+
+        <div class="input-field">
+
+          <input
+            id="deadline"
+            name="deadline"
+            type="datetime-local"
+
+            value="<%= formData.deadline || '' %>"
+
+            required
+          >
+
+          <label
+            for="deadline"
+            class="active"
+          >
+            Deadline
+          </label>
+
+        </div>
+
+
+        <!-- Estimated effort -->
+
+        <div class="input-field">
+
+          <input
+            id="estimatedEffortHours"
+
+            name="estimatedEffortHours"
+
+            type="number"
+
+            min="0.25"
+
+            max="200"
+
+            step="0.25"
+
+            value="<%=
+              formData.estimatedEffortHours ||
+              1
+            %>"
+
+            required
+          >
+
+          <label
+            for="estimatedEffortHours"
+            class="active"
+          >
+            Estimated effort (hours)
+          </label>
+
+        </div>
+
+      </div>
+
+
+      <p class="sb-effort-help">
+
+        Minimum:
+
+        <strong>
+          0.25 hours
+        </strong>
+
+        (15 minutes)
+
+      </p>
+
+
+      <!-- ==================================================
+           PRIORITY
+           ================================================== -->
+
+      <label class="sb-field-label">
+        Priority — optional
+      </label>
+
+
+      <div class="sb-priority-group">
+
+        <%
+
+          const priorities = [
+            {
+              value: 'low',
+              label: 'Low'
+            },
+            {
+              value: 'medium',
+              label: 'Medium'
+            },
+            {
+              value: 'high',
+              label: 'High'
+            }
+          ];
+
+
+          const selectedPriority =
+            formData.priority ||
+            'medium';
+
+        %>
+
+
+        <% priorities.forEach((item) => { %>
+
+          <label
+            class="sb-priority-option
+            <%= selectedPriority === item.value
+              ? 'selected'
+              : '' %>"
+          >
+
+            <input
+              type="radio"
+
+              name="priority"
+
+              value="<%= item.value %>"
+
+              <%= selectedPriority === item.value
+                ? 'checked'
+                : '' %>
+            >
+
+            <span>
+              <%= item.label %>
+            </span>
+
+          </label>
+
+        <% }) %>
+
+      </div>
+
+
+      <!-- ==================================================
+           CREATE TASK
+           ================================================== -->
+
+      <button
+        class="sb-primary-btn sb-full"
+        type="submit"
+      >
+        Create Task →
+      </button>
+
+
+      <!-- Back -->
+
+      <a
+        class="sb-text-link"
+        href="/subjects/new"
+      >
+        ← Back to subject
+      </a>
+
+    </form>
+
+  </section>
+
+</main>
+
+
+<script>
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function () {
+
+    // ---------------------------------
+    // Priority selection
+    // ---------------------------------
+
+    const priorityOptions =
+      document.querySelectorAll(
+        '.sb-priority-option'
+      );
+
+
+    priorityOptions.forEach(
+      function (option) {
+
+        const radio =
+          option.querySelector(
+            'input[type="radio"]'
+          );
+
+
+        radio.addEventListener(
+          'change',
+          function () {
+
+            priorityOptions.forEach(
+              function (item) {
+
+                item.classList.remove(
+                  'selected'
+                );
+
+              }
+            );
+
+
+            option.classList.add(
+              'selected'
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+);
+
+</script>
+
+
+<%- include('_footer') %>

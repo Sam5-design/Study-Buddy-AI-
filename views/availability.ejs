@@ -1,0 +1,99 @@
+<%- include('_head', { title: 'Study Time' }) %>
+<%- include('_header') %>
+
+<main class="sb-page sb-two-column">
+  <section class="sb-hero">
+    <p class="sb-eyebrow">FINAL STEP</p>
+    <h1>Make room for the<br />work that matters.</h1>
+    <p class="sb-copy">
+      Tell us when you're actually free to study. We'll use those windows to
+      create a plan that fits around your real week.
+    </p>
+
+    <div class="sb-progress-steps">
+      <div class="complete"><span>✓</span> Subject</div>
+      <div class="complete"><span>✓</span> Tasks</div>
+      <div class="active"><span>03</span> Study time</div>
+    </div>
+  </section>
+
+  <section class="sb-card sb-form-card sb-availability-card">
+    <p class="sb-step-label">STEP 3 OF 3</p>
+    <h2>Set your available study time</h2>
+    <p class="sb-muted">Add the periods when you can realistically focus.</p>
+
+    <% if (errors.length) { %>
+      <div class="sb-error-box">
+        <% errors.forEach((error) => { %><p><%= error %></p><% }) %>
+      </div>
+    <% } %>
+
+    <% if (typeof saved !== 'undefined' && saved) { %>
+      <div class="sb-success-box">Availability saved.</div>
+    <% } %>
+
+    <form id="availabilityForm" action="/planner/availability" method="POST">
+      <div class="sb-availability-list">
+        <% days.forEach((day) => { const window = windowMap[day.key]; %>
+          <div class="sb-day-row">
+            <label class="sb-day-check">
+              <input
+                type="checkbox"
+                name="<%= day.key %>_enabled"
+                value="1"
+                <%= window ? 'checked' : '' %>
+              />
+              <span><%= day.name %></span>
+            </label>
+
+            <input
+              type="time"
+              name="<%= day.key %>_start"
+              value="<%= window ? window.start : '18:00' %>"
+            />
+            <span class="sb-time-separator">to</span>
+            <input
+              type="time"
+              name="<%= day.key %>_end"
+              value="<%= window ? window.end : '20:00' %>"
+            />
+          </div>
+        <% }) %>
+      </div>
+
+      <label class="sb-field-label">Preferred session length</label>
+      <div class="sb-priority-group">
+        <% [30, 60, 90].forEach((minutes) => { %>
+          <label class="sb-priority-option <%= Number(sessionLength) === minutes ? 'selected' : '' %>">
+            <input type="radio" name="sessionLength" value="<%= minutes %>" <%= Number(sessionLength) === minutes ? 'checked' : '' %> />
+            <span><%= minutes %> min</span>
+          </label>
+        <% }) %>
+      </div>
+
+      <button class="sb-secondary-btn sb-full" type="submit">Save availability</button>
+    </form>
+
+    <form id="generatePlanForm" action="/planner/generate" method="POST">
+      <button class="sb-primary-btn sb-full" type="submit">Generate Study Plan →</button>
+    </form>
+
+    <a class="sb-text-link" href="/planner/tasks/new">← Back to tasks</a>
+  </section>
+</main>
+
+<div class="sb-loading-overlay hide" id="loadingOverlay" aria-live="polite">
+  <div class="sb-loading-card">
+    <div class="preloader-wrapper big active">
+      <div class="spinner-layer spinner-red-only">
+        <div class="circle-clipper left"><div class="circle"></div></div>
+        <div class="gap-patch"><div class="circle"></div></div>
+        <div class="circle-clipper right"><div class="circle"></div></div>
+      </div>
+    </div>
+    <h3>Creating a week that fits.</h3>
+    <p>Matching tasks to your available study windows…</p>
+  </div>
+</div>
+
+<%- include('_footer') %>
