@@ -1,0 +1,85 @@
+<%- include('_head', { title: 'Study Plan - Calendar' }) %>
+<%- include('_header') %>
+
+<main class="sb-page sb-plan-page">
+  <section class="sb-plan-heading">
+    <div>
+      <p class="sb-eyebrow">YOUR STUDY PLAN</p>
+      <h1>See the week at a glance.</h1>
+      <p class="sb-copy">Use the weekly calendar to see where each study block sits.</p>
+    </div>
+
+    <div class="sb-toggle">
+      <a href="/planner/plan?view=list">List</a>
+      <a class="active" href="/planner/plan?view=calendar">Calendar</a>
+    </div>
+  </section>
+
+  <section class="sb-summary-grid sb-plan-summary">
+    <div class="sb-summary mint"><span>THIS WEEK</span><strong><%= totalHours %> h</strong><small>planned study time</small></div>
+    <div class="sb-summary yellow"><span>SESSIONS</span><strong><%= sessions.length %></strong><small>study blocks</small></div>
+    <div class="sb-summary coral-soft"><span>PROGRESS</span><strong><%= progress %>%</strong><small>current completion</small></div>
+  </section>
+
+  <% if (!sessions.length) { %>
+    <section class="sb-card sb-empty-state">
+      <h2>No sessions planned yet.</h2>
+      <p>Set your available study time and generate a plan.</p>
+      <a href="/planner/availability" class="sb-primary-btn">Set study time</a>
+    </section>
+  <% } else { %>
+    <section class="sb-plan-layout sb-calendar-layout">
+      <div class="sb-card sb-calendar">
+        <% weekDays.forEach((day) => { %>
+          <div class="sb-calendar-day">
+            <div class="sb-calendar-day-heading">
+              <strong><%= day.dayName %></strong>
+              <span><%= day.dayNumber %></span>
+            </div>
+
+            <div class="sb-calendar-day-body">
+              <% if (!day.sessions.length) { %>
+                <span class="sb-no-session">No sessions</span>
+              <% } %>
+
+              <% day.sessions.forEach((session) => { %>
+                <a
+                  class="sb-calendar-session <%= session.completed ? 'completed' : '' %>"
+                  href="/planner/plan?view=calendar&session=<%= session._id %>"
+                  style="--subject-colour:<%= session.subject.colour || '#E56B61' %>"
+                >
+                  <strong><%= session.task.name %></strong>
+                  <span><%= new Date(session.startDate).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) %></span>
+                  <small><%= session.durationMinutes %> min</small>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <% if (selectedSession) { %>
+        <aside class="sb-card sb-session-detail">
+          <p class="sb-step-label">SESSION DETAILS</p>
+          <h2><%= selectedSession.task.name %></h2>
+          <p class="sb-muted"><%= selectedSession.subject.code %> • <%= new Date(selectedSession.startDate).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) %></p>
+
+          <div class="sb-detail-grid">
+            <div><span>Estimated time</span><strong><%= selectedSession.durationMinutes %> min</strong></div>
+            <div><span>Priority</span><strong><%= selectedSession.task.priority %></strong></div>
+            <div><span>Subject</span><strong><%= selectedSession.subject.code %></strong></div>
+            <div><span>Status</span><strong><%= selectedSession.completed ? 'Done' : 'Planned' %></strong></div>
+          </div>
+
+          <% if (!selectedSession.completed) { %>
+            <form action="/planner/sessions/<%= selectedSession._id %>/complete" method="POST">
+              <button class="sb-primary-btn sb-full" type="submit">Mark as done</button>
+            </form>
+          <% } %>
+        </aside>
+      <% } %>
+    </section>
+  <% } %>
+</main>
+
+<%- include('_footer') %>

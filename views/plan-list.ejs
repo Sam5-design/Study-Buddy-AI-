@@ -1,0 +1,99 @@
+<%- include('_head', { title: 'Study Plan - List' }) %>
+<%- include('_header') %>
+
+<main class="sb-page sb-plan-page">
+  <section class="sb-plan-heading">
+    <div>
+      <p class="sb-eyebrow">YOUR STUDY PLAN</p>
+      <h1>Your week, in order.</h1>
+      <p class="sb-copy">Review each session in chronological order and switch between list or calendar view whenever you want.</p>
+    </div>
+
+    <div class="sb-toggle">
+      <a class="active" href="/planner/plan?view=list">List</a>
+      <a href="/planner/plan?view=calendar">Calendar</a>
+    </div>
+  </section>
+
+  <% if (generated) { %>
+    <div class="sb-success-box sb-plan-message">
+      Your study plan has been generated.
+      <% if (unplannedMinutes > 0) { %>
+        <strong><%= unplannedMinutes %> minutes could not be scheduled before the current deadlines.</strong>
+      <% } %>
+    </div>
+  <% } %>
+
+  <section class="sb-summary-grid sb-plan-summary">
+    <div class="sb-summary mint"><span>THIS WEEK</span><strong><%= totalHours %> h</strong><small>planned study time</small></div>
+    <div class="sb-summary yellow"><span>SESSIONS</span><strong><%= sessions.length %></strong><small>study blocks</small></div>
+    <div class="sb-summary coral-soft"><span>PROGRESS</span><strong><%= progress %>%</strong><small>current completion</small></div>
+  </section>
+
+  <% if (!sessions.length) { %>
+    <section class="sb-card sb-empty-state">
+      <h2>No sessions planned yet.</h2>
+      <p>Set your available study time and generate a plan.</p>
+      <a href="/planner/availability" class="sb-primary-btn">Set study time</a>
+    </section>
+  <% } else { %>
+    <section class="sb-plan-layout">
+      <div class="sb-card sb-session-list-card">
+        <% groupedSessions.forEach((group) => { %>
+          <h3 class="sb-date-heading"><%= group.label %></h3>
+
+          <% group.sessions.forEach((session) => { %>
+            <a
+              href="/planner/plan?view=list&session=<%= session._id %>"
+              class="sb-session-row <%= selectedSession && String(selectedSession._id) === String(session._id) ? 'selected' : '' %> <%= session.completed ? 'completed' : '' %>"
+              style="--subject-colour:<%= session.subject.colour || '#E56B61' %>"
+            >
+              <div>
+                <strong><%= session.task.name %></strong>
+                <span>
+                  <%= new Date(session.startDate).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) %>
+                  • <%= session.subject.code %>
+                </span>
+              </div>
+              <div class="sb-session-meta">
+                <span><%= session.durationMinutes %> min</span>
+                <% if (session.completed) { %><b>✓</b><% } %>
+              </div>
+            </a>
+          <% }) %>
+        <% }) %>
+      </div>
+
+      <% if (selectedSession) { %>
+        <aside class="sb-card sb-session-detail">
+          <p class="sb-step-label">SESSION DETAILS</p>
+          <h2><%= selectedSession.task.name %></h2>
+          <p class="sb-muted">
+            <%= selectedSession.subject.code %> •
+            <%= new Date(selectedSession.startDate).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'short' }) %> •
+            <%= new Date(selectedSession.startDate).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }) %>
+          </p>
+
+          <div class="sb-detail-grid">
+            <div><span>Estimated time</span><strong><%= selectedSession.durationMinutes %> min</strong></div>
+            <div><span>Priority</span><strong><%= selectedSession.task.priority %></strong></div>
+            <div><span>Subject</span><strong><%= selectedSession.subject.code %></strong></div>
+            <div><span>Status</span><strong><%= selectedSession.completed ? 'Done' : 'Planned' %></strong></div>
+          </div>
+
+          <% if (selectedSession.task.notes) { %>
+            <div class="sb-notes"><span>Notes</span><p><%= selectedSession.task.notes %></p></div>
+          <% } %>
+
+          <% if (!selectedSession.completed) { %>
+            <form action="/planner/sessions/<%= selectedSession._id %>/complete" method="POST">
+              <button class="sb-primary-btn sb-full" type="submit">Mark as done</button>
+            </form>
+          <% } %>
+        </aside>
+      <% } %>
+    </section>
+  <% } %>
+</main>
+
+<%- include('_footer') %>

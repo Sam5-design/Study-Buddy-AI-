@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Study Plan — Study Buddy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <main class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+      <h1 style="font-family: 'Fraunces', serif;">Your Study Plan</h1>
+
+      <% if (!planView.hasPlan) { %>
+        <!-- No-plan state: student has never generated a plan. -->
+        <div class="card-panel">
+          <h5>No study plan yet</h5>
+          <p>
+            Add your subjects and tasks, set how much time you have to study,
+            then generate a plan and it'll show up here.
+          </p>
+          <a class="btn" href="/subjects">Add subjects and tasks</a>
+          <button class="btn-flat" id="generate-plan">Generate my plan</button>
+        </div>
+
+      <% } else if (planView.days.length === 0) { %>
+        <!-- Edge case: a plan exists but has no scheduled blocks, for
+             example every task was already completed. -->
+        <div class="card-panel">
+          <h5>Nothing scheduled</h5>
+          <p>You have a plan, but there's nothing left to study in it. Add a new task to get more sessions.</p>
+          <a class="btn" href="/subjects">Add a task</a>
+        </div>
+
+      <% } else { %>
+        <p class="grey-text">
+          Generated <%= new Date(planView.generatedAt).toLocaleString('en-AU') %>
+          &middot; <%= planView.totalScheduledHours %> hours scheduled across <%= planView.days.length %> days
+        </p>
+
+        <%#
+             ================================================================
+             TEMPORARY RENDERING BLOCK
+
+             Juhar owns views/studyPlan/listView.ejs (list component) and
+             Manmeet owns views/studyPlan/calendarView.ejs (calendar
+             component). Both files are still empty, so the plain table
+             below exists only to prove the plan data reaches the view
+             correctly.
+
+             When their components land, delete the table below and
+             replace it with an if/else on currentView that includes
+             calendarView or listView, passing planView through.
+
+             Their components should read planView.days, which is already
+             grouped by date and sorted. No further mapping needed.
+             ================================================================
+        %>
+        <% planView.days.forEach(function (day) { %>
+          <div class="card" style="margin-bottom: 1rem;">
+            <div class="card-content">
+              <span class="card-title">
+                <%= day.label %>
+                <% if (day.isToday) { %><span class="new badge blue" data-badge-caption="today"></span><% } %>
+              </span>
+              <p class="grey-text"><%= day.totalHours %> hours</p>
+              <table class="striped">
+                <tbody>
+                  <% day.blocks.forEach(function (block) { %>
+                    <tr>
+                      <td>
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:<%= block.subjectColour %>;"></span>
+                        <%= block.subjectName %>
+                      </td>
+                      <td><%= block.description %></td>
+                      <td><%= block.allocatedHours %>h</td>
+                      <td><%= block.status %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <% }); %>
+        <!-- ============ END TEMPORARY RENDERING BLOCK ============ -->
+      <% } %>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+      // Calls the generate endpoint, then reloads so the plan renders.
+      var generateButton = document.getElementById('generate-plan');
+      if (generateButton) {
+        generateButton.addEventListener('click', async function () {
+          generateButton.disabled = true;
+          try {
+            var response = await fetch('/study-plan/generate', { method: 'POST' });
+            var payload = await response.json();
+            if (response.ok) {
+              window.location.reload();
+            } else {
+              alert(payload.message || 'Could not generate a plan.');
+              generateButton.disabled = false;
+            }
+          } catch (error) {
+            alert('Could not reach the server. Please try again.');
+            generateButton.disabled = false;
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
