@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Study Buddy AI — Scheduling Algorithm Demo</title>
+<style>
+  :root {
+    --coral: #d85a30;
+    --coral-dark: #993c1d;
+    --navy: #1f2a44;
+    --cream: #fdf6ec;
+    --card: #ffffff;
+    --border: #e7ded1;
+    --text-muted: #6b6459;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    margin: 0;
+    padding: 0 0 60px 0;
+  }
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 28px 24px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 6px 0; font-size: 1.6rem; }
+  header p { margin: 0; color: #c9cedd; font-size: 0.95rem; }
+  main {
+    max-width: 900px;
+    margin: 28px auto;
+    padding: 0 16px;
+  }
+  .note {
+    background: #fff3ea;
+    border: 1px solid #f0c9ac;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    color: #7a3d1a;
+    margin-bottom: 24px;
+  }
+  .note a { color: var(--coral-dark); }
+  h2 {
+    font-size: 1.15rem;
+    margin: 32px 0 12px 0;
+    color: var(--navy);
+  }
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .task-card .subject {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--coral-dark);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .task-card .name {
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .task-card .meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge.high { background: #fbdcd2; color: var(--coral-dark); }
+  .badge.medium { background: #fdeecb; color: #8a5a05; }
+  .badge.low { background: #dcecdc; color: #2c6b2c; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .controls label { font-size: 0.9rem; color: var(--text-muted); }
+  .controls input {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+  button#generateBtn {
+    background: var(--coral);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button#generateBtn:hover { background: var(--coral-dark); }
+
+  #scheduleOutput { margin-top: 10px; }
+  .day-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+  }
+  .day-block .day-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    color: var(--navy);
+  }
+  .session {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-top: 1px dashed var(--border);
+    font-size: 0.9rem;
+  }
+  .session:first-of-type { border-top: none; }
+  .session .task-label { font-weight: 600; }
+  .session .hours { color: var(--text-muted); font-size: 0.85rem; }
+
+  .slack-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 0.85rem;
+  }
+  .slack-table th, .slack-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .slack-table th { color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+  footer {
+    max-width: 900px;
+    margin: 40px auto 0 auto;
+    padding: 0 16px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Study Buddy AI — weighted scheduling algorithm</h1>
+  <p>Live demo of Komal Singh's Sprint 1 contribution (s226497726)</p>
+</header>
+
+<main>
+  <div class="note">
+    This page runs the exact scheduling algorithm merged into the team repository at
+    <a href="https://github.com/Sam5-design/Study-Buddy-AI-/blob/main/services/aiSchedulingEngine/generatePlan.js" target="_blank">generatePlan.js</a>,
+    reproduced here as a standalone demo since the group's own subject/task and study-plan
+    screens are still being built by other team members. Click "Generate plan" to see the
+    algorithm actually schedule the sample tasks below.
+  </div>
+
+  <h2>Sample tasks (input)</h2>
+  <div class="input-grid" id="taskGrid"></div>
+
+  <div class="controls">
+    <label for="availableHours">Available study time per day:</label>
+    <input type="number" id="availableHours" value="2" min="0.5" step="0.5" />
+    <span style="font-size:0.9rem; color:var(--text-muted)">hours</span>
+    <button id="generateBtn">Generate plan</button>
+  </div>
+
+  <h2>Generated weekly schedule (output)</h2>
+  <div id="scheduleOutput"></div>
+
+  <h2>Why this order — the slack calculation</h2>
+  <table class="slack-table" id="slackTable"></table>
+</main>
+
+<footer>
+  Algorithm design: slack = (days until deadline) &minus; (hours remaining &divide; hours available per day).
+  Lower slack is scheduled first; priority breaks ties. Commit
+  <a href="https://github.com/Sam5-design/Study-Buddy-AI-/commit/7ed71b3" target="_blank">7ed71b3</a> &middot;
+  Merged <a href="https://github.com/Sam5-design/Study-Buddy-AI-/pull/4" target="_blank">Pull Request #4</a>
+</footer>
+
+<script>
+// ---- This is the exact algorithm from services/aiSchedulingEngine/generatePlan.js ----
+const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+
+function daysBetween(from, to) {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+  return (to.getTime() - from.getTime()) / MS_PER_DAY;
+}
+
+async function generatePlan({ tasks, availableStudyTimeHours, startDate }) {
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    throw new Error('At least one task is required to generate a plan.');
+  }
+  if (typeof availableStudyTimeHours !== 'number' || availableStudyTimeHours <= 0) {
+    throw new Error('availableStudyTimeHours must be a positive number.');
+  }
+
+  const start = new Date(startDate);
+
+  const scored = tasks.map((task) => {
+    const deadline = new Date(task.deadline);
+    const daysUntilDeadline = daysBetween(start, deadline);
+    const daysNeeded = task.estimatedEffortHours / availableStudyTimeHours;
+    const slack = daysUntilDeadline - daysNeeded;
+    const priorityRank = PRIORITY_RANK[task.priority] ?? PRIORITY_RANK.medium;
+    return { task, slack, priorityRank, deadline };
+  });
+
+  scored.sort((a, b) => {
+    if (a.slack !== b.slack) return a.slack - b.slack;
+    if (a.priorityRank !== b.priorityRank) return a.priorityRank - b.priorityRank;
+    return a.deadline - b.deadline;
+  });
+
+  const blocks = [];
+  let currentDate = new Date(start);
+  let hoursLeftToday = availableStudyTimeHours;
+
+  for (const { task } of scored) {
+    let hoursRemaining = task.estimatedEffortHours;
+    while (hoursRemaining > 0) {
+      if (hoursLeftToday <= 0) {
+        currentDate = new Date(currentDate);
+        currentDate.setDate(currentDate.getDate() + 1);
+        hoursLeftToday = availableStudyTimeHours;
+      }
+      const allocatedHours = Math.min(hoursRemaining, hoursLeftToday);
+      blocks.push({
+        date: new Date(currentDate),
+        task: task._id,
+        subject: task.subject,
+        allocatedHours,
+      });
+      hoursRemaining -= allocatedHours;
+      hoursLeftToday -= allocatedHours;
+    }
+  }
+
+  return { blocks, scored };
+}
+// ---- end of algorithm ----
+
+const sampleTasks = [
+  { _id: 'task1', subject: 'SIT725', name: 'Sprint 2 report draft', deadline: '2026-09-27', estimatedEffortHours: 6, priority: 'medium' },
+  { _id: 'task2', subject: 'SIT719', name: 'Risk register update', deadline: '2026-09-20', estimatedEffortHours: 1.5, priority: 'high' },
+  { _id: 'task3', subject: 'SIT753', name: 'Reflective journal entry', deadline: '2026-09-30', estimatedEffortHours: 3, priority: 'low' },
+  { _id: 'task4', subject: 'SIT725', name: 'Algorithm unit tests', deadline: '2026-09-19', estimatedEffortHours: 2, priority: 'high' },
+];
+
+function renderTaskCards() {
+  const grid = document.getElementById('taskGrid');
+  grid.innerHTML = '';
+  sampleTasks.forEach((t) => {
+    const el = document.createElement('div');
+    el.className = 'task-card';
+    el.innerHTML = `
+      <div class="subject">${t.subject}</div>
+      <div class="name">${t.name}</div>
+      <div class="meta">
+        <span>Due ${t.deadline}</span>
+        <span>${t.estimatedEffortHours}h effort</span>
+        <span class="badge ${t.priority}">${t.priority}</span>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function taskNameFor(id) {
+  const t = sampleTasks.find((x) => x._id === id);
+  return t ? `${t.subject} \u2014 ${t.name}` : id;
+}
+
+async function runDemo() {
+  const availableHours = parseFloat(document.getElementById('availableHours').value) || 2;
+  const startDate = '2026-09-17';
+
+  const { blocks, scored } = await generatePlan({
+    tasks: sampleTasks,
+    availableStudyTimeHours: availableHours,
+    startDate,
+  });
+
+  const output = document.getElementById('scheduleOutput');
+  output.innerHTML = '';
+
+  const byDay = new Map();
+  blocks.forEach((b) => {
+    const key = b.date.toDateString();
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(b);
+  });
+
+  byDay.forEach((sessions, key) => {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day-block';
+    const dateObj = sessions[0].date;
+    dayEl.innerHTML = `<div class="day-title">${formatDate(dateObj)}</div>`;
+    sessions.forEach((s) => {
+      const row = document.createElement('div');
+      row.className = 'session';
+      row.innerHTML = `<span class="task-label">${taskNameFor(s.task)}</span><span class="hours">${s.allocatedHours}h</span>`;
+      dayEl.appendChild(row);
+    });
+    output.appendChild(dayEl);
+  });
+
+  const slackTable = document.getElementById('slackTable');
+  const rows = scored.map((s) => `
+    <tr>
+      <td>${taskNameFor(s.task._id)}</td>
+      <td>${s.slack.toFixed(2)} days</td>
+      <td>${s.task.priority}</td>
+    </tr>
+  `).join('');
+  slackTable.innerHTML = `
+    <tr><th>Task</th><th>Slack (scheduling order)</th><th>Priority</th></tr>
+    ${rows}
+  `;
+}
+
+document.getElementById('generateBtn').addEventListener('click', runDemo);
+renderTaskCards();
+runDemo();
+</script>
+
+</body>
+</html>
