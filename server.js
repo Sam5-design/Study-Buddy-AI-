@@ -129,7 +129,7 @@ app.post('/api/register', async (req, res) => {
         console.error(err);
         return res.status(201).json({ message: 'Account created! Please log in.', redirect: '/login' });
       }
-      return res.status(201).json({ message: 'Account created successfully!', redirect: '/' });
+      return res.status(201).json({ message: 'Account created successfully!', redirect: '/subjects/new' });
     });
 
   } catch (error) {
@@ -152,7 +152,7 @@ app.post('/api/login', (req, res, next) => {
         console.error(err);
         return res.status(500).json({ message: 'Login succeeded but session failed. Please try again.' });
       }
-      return res.status(200).json({ message: 'Logged in successfully!', redirect: '/' });
+      return res.status(200).json({ message: 'Logged in successfully!', redirect: '/subjects/new' });
     });
   })(req, res, next);
 });
