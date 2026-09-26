@@ -1,4 +1,5 @@
 const Task = require('../models/Task');
+const User = require('../models/User');
 const StudyPlan = require('../models/StudyPlan');
 const aiSchedulingEngine = require('../services/aiSchedulingEngine');
 const { buildPlanViewModel } = require('../utils/planViewModel');
@@ -103,4 +104,39 @@ async function generateStudyPlan(req, res) {
   }
 }
 
-module.exports = { showStudyPlan, generateStudyPlan };
+/**
+ * GET /study-plan/availability
+ * FR-8: show the form where the student sets their daily study time.
+ */
+function showAvailability(req, res) {
+  return res.render('studyPlan/availability', {
+    hours: req.user.availableStudyTimeHours || '',
+    error: null,
+  });
+}
+
+/**
+ * POST /study-plan/availability
+ * FR-8: save the student's daily study time, then send them to the
+ * Study Plan page where they can generate their plan.
+ */
+async function saveAvailability(req, res, next) {
+  try {
+    const hours = Number(req.body.availableStudyTimeHours);
+
+    if (!Number.isFinite(hours) || hours < 0.5 || hours > 16) {
+      return res.status(400).render('studyPlan/availability', {
+        hours: req.body.availableStudyTimeHours,
+        error: 'Please enter a number of hours between 0.5 and 16.',
+      });
+    }
+
+    await User.findByIdAndUpdate(req.user.id, { availableStudyTimeHours: hours });
+
+    return res.redirect('/study-plan');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { showStudyPlan, generateStudyPlan, showAvailability, saveAvailability };

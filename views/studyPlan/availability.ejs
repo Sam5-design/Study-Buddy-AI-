@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Set Your Study Time — Study Buddy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <main class="container" style="padding-top: 2rem; padding-bottom: 4rem; max-width: 640px;">
+      <p class="grey-text">STEP 3 OF 3</p>
+      <h1 style="font-family: 'Fraunces', serif;">Set your study time</h1>
+      <p>How many hours a day can you realistically study? We'll use this to build your plan.</p>
+
+      <% if (error) { %>
+        <div class="card-panel red lighten-4 red-text text-darken-4"><%= error %></div>
+      <% } %>
+
+      <form action="/study-plan/availability" method="POST" class="card-panel">
+        <label for="availableStudyTimeHours">Hours per day</label>
+        <input
+          type="number"
+          id="availableStudyTimeHours"
+          name="availableStudyTimeHours"
+          min="0.5"
+          max="16"
+          step="0.5"
+          value="<%= hours %>"
+          required
+        />
+        <button class="btn" type="submit">Save and continue →</button>
+      </form>
+
+      <a href="/subjects/new">← Back to subjects</a>
+    </main>
+  </body>
+</html>

@@ -19,6 +19,10 @@
   <body>
     <main class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
       <h1 style="font-family: 'Fraunces', serif;">Your Study Plan</h1>
+      <p>
+        <a href="/study-plan/availability">Change my study time</a>
+        &middot; <a href="/subjects/new">Add another subject</a>
+      </p>
 
       <% if (!planView.hasPlan) { %>
         <!-- No-plan state: student has never generated a plan. -->
@@ -28,7 +32,7 @@
             Add your subjects and tasks, set how much time you have to study,
             then generate a plan and it'll show up here.
           </p>
-          <a class="btn" href="/subjects">Add subjects and tasks</a>
+          <a class="btn" href="/subjects/new">Add subjects and tasks</a>
           <button class="btn-flat" id="generate-plan">Generate my plan</button>
         </div>
 
@@ -38,7 +42,7 @@
         <div class="card-panel">
           <h5>Nothing scheduled</h5>
           <p>You have a plan, but there's nothing left to study in it. Add a new task to get more sessions.</p>
-          <a class="btn" href="/subjects">Add a task</a>
+          <a class="btn" href="/subjects/new">Add a task</a>
         </div>
 
       <% } else { %>
