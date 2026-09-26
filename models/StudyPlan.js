@@ -83,6 +83,15 @@ const studyPlanSchema = new mongoose.Schema({
     type: [scheduleBlockSchema],
     default: [],
   },
+  // How many blocks at the start of \`blocks\` are history carried over from
+  // the previous plan (sessions already done or missed). The rest were
+  // scheduled by this plan. Lets the next regeneration report only what
+  // changed since this plan was made.
+  carriedBlockCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   adjustments: {
     type: [adjustmentSchema],
     default: [],

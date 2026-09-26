@@ -29,6 +29,20 @@ const userSchema = new mongoose.Schema({
     max: [16, 'Study time cannot be more than 16 hours a day.'],
     default: null,
   },
+  // Time of day the student usually starts studying, e.g. '18:00'.
+  // The dashboard lays each day's study blocks out from this time.
+  studyStartTime: {
+    type: String,
+    match: [/^([01]\d|2[0-3]):[0-5]\d$/, 'Start time must look like 18:00.'],
+    default: '18:00',
+  },
+  // Longest single study session in minutes. Longer tasks are split into
+  // sessions of this length so different subjects can share a day.
+  sessionLengthMinutes: {
+    type: Number,
+    enum: [30, 60, 90, 120],
+    default: 60,
+  },
 }, {
   timestamps: true,
 });

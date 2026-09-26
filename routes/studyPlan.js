@@ -6,6 +6,7 @@ const {
   generateStudyPlan,
   showAvailability,
   saveAvailability,
+  toggleBlockComplete,
 } = require('../controllers/studyPlanController');
 
 // FR-16: render the student's current plan.
@@ -18,5 +19,8 @@ router.post('/generate', ensureAuth, generateStudyPlan);
 // FR-8: set how many hours a day the student can study.
 router.get('/availability', ensureAuth, showAvailability);
 router.post('/availability', ensureAuth, saveAvailability);
+
+// FR-13: mark a study block done (or undo it).
+router.post('/blocks/:blockId/complete', ensureAuth, toggleBlockComplete);
 
 module.exports = router;

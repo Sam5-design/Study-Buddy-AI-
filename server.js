@@ -12,6 +12,7 @@ const User = require('./models/User');
 const studyPlanRoutes = require('./routes/studyPlan');
 const authRoutes = require('./routes/auth');
 const subjectRoutes = require('./routes/subjects');
+const profileRoutes = require('./routes/profile');
 
 const ensureAuth = require('./middleware/ensureAuth');
 
@@ -156,7 +157,7 @@ app.post('/api/login', (req, res, next) => {
         console.error(err);
         return res.status(500).json({ message: 'Login succeeded but session failed. Please try again.' });
       }
-      return res.status(200).json({ message: 'Logged in successfully!', redirect: '/subjects/new' });
+      return res.status(200).json({ message: 'Logged in successfully!', redirect: '/study-plan' });
     });
   })(req, res, next);
 });
@@ -214,6 +215,13 @@ app.use(
   '/study-plan',
   studyPlanRoutes
 );
+
+
+// ======================================================
+// PROFILE (personal details)
+// ======================================================
+
+app.use('/profile', profileRoutes);
 
 
 // ======================================================

@@ -82,6 +82,7 @@ function buildPlanViewModel(plan) {
       taskId: task._id ? task._id.toString() : String(block.task),
       description: task.description || 'Untitled task',
       subjectName: subject.name || 'Unknown subject',
+      subjectCode: subject.code || '',
       subjectColour: subject.colour || '#26a69a',
       allocatedHours: block.allocatedHours,
       status: block.status,

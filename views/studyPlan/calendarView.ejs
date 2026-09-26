@@ -1,0 +1,81 @@
+<%#
+  Study Plan — Calendar View (FR-16)
+  One week, Monday to Sunday, with each study block placed at its clock time.
+  Data comes from utils/dashboardViewModel.js (dashboard.weekDays etc.).
+%>
+<%
+  var HOUR_PX = 64; // height of one hour in the grid
+  var gridHeight = (dashboard.gridEnd - dashboard.gridStart) / 60 * HOUR_PX;
+%>
+<style>
+  .sb-week { overflow-x: auto; }
+  .sb-week-grid { display: grid; grid-template-columns: 56px repeat(7, minmax(96px, 1fr)); min-width: 760px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .sb-week-dayhead { text-align: center; padding: 10px 4px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; }
+  .sb-week-dayhead b { display: block; font-size: 0.85rem; letter-spacing: 0; margin-top: 2px; color: var(--muted); }
+  .sb-week-dayhead.is-today b { color: #fff; background: var(--coral); width: 26px; height: 26px; line-height: 26px; border-radius: 50%; margin: 2px auto 0; }
+  .sb-week-corner { border-bottom: 1px solid var(--line); }
+  .sb-week-times { position: relative; }
+  .sb-week-times span { position: absolute; right: 8px; font-size: 0.65rem; color: var(--muted); transform: translateY(-50%); }
+  .sb-week-col { position: relative; border-left: 1px solid var(--line); background-image: linear-gradient(to bottom, var(--line) 1px, transparent 1px); }
+  .sb-week-col.is-past { background-color: #faf7f2; }
+  .sb-block { position: absolute; left: 5px; right: 5px; border-radius: 8px; border-left: 4px solid; padding: 5px 7px; font-size: 0.7rem; line-height: 1.25; overflow: hidden; }
+  .sb-block strong { display: block; font-size: 0.74rem; }
+  .sb-block small { color: var(--muted); display: block; }
+  .sb-block.complete { opacity: 0.55; }
+  .sb-block.missed { background: repeating-linear-gradient(135deg, #fbe9e7, #fbe9e7 6px, #fff 6px, #fff 12px) !important; border-left-color: #c9483e !important; }
+  .sb-missed-tag { color: #b3423a; font-weight: 700; font-size: 0.62rem; letter-spacing: 0.05em; }
+  .sb-block.complete .sb-block-task { text-decoration: line-through; }
+  .sb-block form { position: absolute; top: 4px; right: 4px; margin: 0; }
+  .sb-done { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid currentColor; background: #fff; font-size: 0.65rem; line-height: 1; cursor: pointer; padding: 0; color: var(--navy); }
+  .sb-block.complete .sb-done { background: var(--green); border-color: var(--green); color: #fff; }
+  .sb-week-empty { position: absolute; inset: 8px 5px auto; padding: 6px 8px; border-radius: 8px; background: #e6efe9; color: #5d7a6c; font-size: 0.7rem; }
+</style>
+
+<div class="sb-week">
+  <div class="sb-week-grid">
+    <!-- Header row -->
+    <div class="sb-week-corner"></div>
+    <% dashboard.weekDays.forEach(function (day) { %>
+      <div class="sb-week-dayhead <%= day.isToday ? 'is-today' : '' %>">
+        <%= day.dayName %>
+        <b><%= day.dayNumber %></b>
+      </div>
+    <% }); %>
+
+    <!-- Hour labels -->
+    <div class="sb-week-times" style="height: <%= gridHeight %>px;">
+      <% dashboard.hourLabels.forEach(function (hour, i) { %>
+        <span style="top: <%= i === 0 ? 10 : i * HOUR_PX %>px;"><%= hour.label %></span>
+      <% }); %>
+    </div>
+
+    <!-- One column per day -->
+    <% dashboard.weekDays.forEach(function (day) { %>
+      <div class="sb-week-col <%= day.isPast ? 'is-past' : '' %>"
+           style="height: <%= gridHeight %>px; background-size: 100% <%= HOUR_PX %>px;">
+        <% if (day.blocks.length === 0 && !day.isPast) { %>
+          <div class="sb-week-empty">Free time</div>
+        <% } %>
+        <% day.blocks.forEach(function (block) {
+             var top = (block.startMinutes - dashboard.gridStart) / 60 * HOUR_PX;
+             var height = Math.max(28, (block.endMinutes - block.startMinutes) / 60 * HOUR_PX - 4);
+        %>
+          <div class="sb-block <%= block.status %>"
+               style="top: <%= top + 2 %>px; height: <%= height %>px; background: <%= tint(block.subjectColour, '2e') %>; border-left-color: <%= block.subjectColour %>;"
+               title="<%= block.subjectName %>: <%= block.description %> (<%= block.timeLabel %>)">
+            <strong><%= block.subjectCode || block.subjectName %></strong>
+            <span class="sb-block-task"><%= block.description %></span>
+            <small><%= block.timeLabel %></small>
+            <% if (block.status === 'missed') { %><span class="sb-missed-tag">MISSED · MOVED</span><% } %>
+            <% if (block.blockId) { %>
+              <form action="/study-plan/blocks/<%= block.blockId %>/complete" method="POST">
+                <button type="submit" class="sb-done"
+                        title="<%= block.status === 'complete' ? 'Mark as not done' : 'Mark as done' %>">✓</button>
+              </form>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    <% }); %>
+  </div>
+</div>

@@ -23,7 +23,7 @@
       </form>
       <p class="grey-text">STEP 3 OF 3</p>
       <h1 style="font-family: 'Fraunces', serif;">Set your study time</h1>
-      <p>How many hours a day can you realistically study? We'll use this to build your plan.</p>
+      <p>How many hours a day can you realistically study, and when do you usually start? We'll use this to build your plan.</p>
 
       <% if (error) { %>
         <div class="card-panel red lighten-4 red-text text-darken-4"><%= error %></div>
@@ -41,10 +41,29 @@
           value="<%= hours %>"
           required
         />
+
+        <label for="studyStartTime">What time do you usually start studying?</label>
+        <input
+          type="time"
+          id="studyStartTime"
+          name="studyStartTime"
+          value="<%= startTime %>"
+          required
+        />
+
+        <label for="sessionLengthMinutes">How long should one study session be?</label>
+        <select id="sessionLengthMinutes" name="sessionLengthMinutes" class="browser-default" style="margin-bottom:1rem;">
+          <% [30, 60, 90, 120].forEach(function (m) { %>
+            <option value="<%= m %>" <%= Number(sessionLength) === m ? 'selected' : '' %>>
+              <%= m < 60 ? m + ' minutes' : (m / 60) + (m === 60 ? ' hour' : ' hours') %>
+            </option>
+          <% }); %>
+        </select>
+
         <button class="btn" type="submit">Save and continue →</button>
       </form>
 
-      <a href="/subjects/new">← Back to subjects</a>
+      <a href="/study-plan">← Back to dashboard</a> &nbsp;·&nbsp; <a href="/subjects/new">Add a subject</a>
     </main>
   </body>
 </html>

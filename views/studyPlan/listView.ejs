@@ -1,0 +1,53 @@
+<%#
+  Study Plan — List View (FR-16)
+  Shows the whole plan day by day, in date order.
+  Reads planView.days from utils/planViewModel.js (already grouped and sorted).
+%>
+<style>
+  .sb-list-day { border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px; padding: 14px 16px; background: #fff; }
+  .sb-list-day.is-today { border-color: var(--coral); box-shadow: 0 0 0 1px var(--coral); }
+  .sb-list-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  .sb-list-head h3 { margin: 0; font-size: 1rem; }
+  .sb-today-tag { background: var(--coral); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+  .sb-list-hours { color: var(--muted); font-size: 0.8rem; }
+  .sb-list-block { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-top: 8px; border-radius: 10px; background: var(--cream); border-left: 5px solid; flex-wrap: wrap; }
+  .sb-list-main { flex: 1 1 200px; min-width: 0; }
+  .sb-list-task { font-weight: 600; }
+  .sb-list-meta { color: var(--muted); font-size: 0.8rem; }
+  .sb-list-time { font-weight: 700; }
+  .sb-status { font-size: 0.7rem; padding: 2px 10px; border-radius: 999px; background: #e3ecf7; color: #2c5d99; text-transform: capitalize; font-weight: 600; }
+  .sb-status.complete { background: #dff1ec; color: #1f7a6d; }
+  .sb-status.missed { background: #fbe3e1; color: #b3423a; }
+  .sb-list-block.complete .sb-list-task { text-decoration: line-through; opacity: 0.6; }
+  .sb-mark { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; color: var(--navy); }
+</style>
+
+<% planView.days.forEach(function (day) { %>
+  <section class="sb-list-day <%= day.isToday ? 'is-today' : '' %>">
+    <div class="sb-list-head">
+      <h3><%= day.label %><% if (day.isToday) { %><span class="sb-today-tag">TODAY</span><% } %></h3>
+      <span class="sb-list-hours"><%= day.totalHours %> <%= day.totalHours === 1 ? 'hour' : 'hours' %> of study</span>
+    </div>
+
+    <% day.blocks.forEach(function (block) { %>
+      <div class="sb-list-block <%= block.status %>" style="border-left-color: <%= block.subjectColour %>;">
+        <div class="sb-list-main">
+          <div class="sb-list-task"><%= block.description %></div>
+          <div class="sb-list-meta">
+            <%= block.subjectCode ? block.subjectCode + ' · ' : '' %><%= block.subjectName %>
+            <% if (block.deadline) { %>
+              · due <%= new Date(block.deadline).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) %>
+            <% } %>
+          </div>
+        </div>
+        <span class="sb-list-time"><%= block.allocatedHours %>h</span>
+        <span class="sb-status <%= block.status %>"><%= block.status %></span>
+        <% if (block.blockId) { %>
+          <form action="/study-plan/blocks/<%= block.blockId %>/complete" method="POST" style="margin:0">
+            <button type="submit" class="sb-mark"><%= block.status === 'complete' ? 'Undo' : 'Mark done' %></button>
+          </form>
+        <% } %>
+      </div>
+    <% }); %>
+  </section>
+<% }); %>

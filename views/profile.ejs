@@ -1,0 +1,136 @@
+<%
+  var displayName = user.fullName || user.email;
+  var initials = displayName.split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+  function clock(hhmm) {
+    var p = String(hhmm || '18:00').split(':');
+    var h = Number(p[0]);
+    return ((h % 12) || 12) + ':' + p[1] + (h >= 12 ? ' PM' : ' AM');
+  }
+  var joined = user.createdAt
+    ? new Date(user.createdAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '—';
+%>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal details — Study Buddy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root { --navy: #14233c; --coral: #e56b61; --cream: #f8f4ee; --sand: #efe7dc; --card: #fffdf9; --line: #e4ddd2; --muted: #7a8494; --green: #2e9e8f; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--navy); }
+      a { color: inherit; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 32px 16px 56px; }
+      .back { font-weight: 600; text-decoration: none; font-size: 0.9rem; }
+      .head { display: flex; align-items: center; gap: 18px; margin: 24px 0; }
+      .avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--coral); color: #fff; font-weight: 700; font-size: 1.6rem; display: grid; place-items: center; flex-shrink: 0; }
+      h1 { font-family: 'Fraunces', serif; font-size: 2rem; margin: 0; }
+      .muted { color: var(--muted); font-size: 0.9rem; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; margin-bottom: 16px; }
+      .label { font-size: 0.7rem; letter-spacing: 0.12em; font-weight: 700; color: var(--muted); margin: 0 0 14px; }
+      .row { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; padding: 10px 0; border-top: 1px solid var(--line); align-items: center; }
+      .row:first-of-type { border-top: none; }
+      .row dt { color: var(--muted); font-size: 0.85rem; }
+      .row dd { margin: 0; font-weight: 600; }
+      input[type=text] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #fff; }
+      .btn { border: none; border-radius: 999px; padding: 10px 20px; font: inherit; font-weight: 600; cursor: pointer; background: var(--navy); color: #fff; }
+      .btn.light { background: #fff; color: var(--navy); border: 1px solid var(--line); text-decoration: none; display: inline-block; }
+      .btn.danger { background: #fff; color: #b3423a; border: 1px solid #efc4bf; }
+      .msg { border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.9rem; }
+      .msg.ok { background: #e3f1ec; color: #1f5e53; }
+      .msg.err { background: #fbe3e1; color: #b3423a; }
+      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .stat { background: var(--sand); border-radius: 14px; padding: 14px; text-align: center; }
+      .stat b { display: block; font-family: 'Fraunces', serif; font-size: 1.6rem; }
+      .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+      @media (max-width: 560px) { .row { grid-template-columns: 1fr; gap: 4px; } .stats { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="/study-plan">← Back to dashboard</a>
+
+      <div class="head">
+        <div class="avatar"><%= initials %></div>
+        <div>
+          <h1><%= displayName %></h1>
+          <div class="muted"><%= user.email %> · Member since <%= joined %></div>
+        </div>
+      </div>
+
+      <% if (saved) { %><div class="msg ok">Your details have been saved.</div><% } %>
+      <% if (error) { %><div class="msg err"><%= error %></div><% } %>
+
+      <!-- Personal details -->
+      <section class="card">
+        <p class="label">PERSONAL DETAILS</p>
+        <form action="/profile" method="POST">
+          <dl style="margin:0">
+            <div class="row">
+              <dt><label for="fullName">Full name</label></dt>
+              <dd><input type="text" id="fullName" name="fullName" value="<%= user.fullName || '' %>" required minlength="2" maxlength="80" /></dd>
+            </div>
+            <div class="row">
+              <dt>Email</dt>
+              <dd><%= user.email %> <span class="muted">(used to log in)</span></dd>
+            </div>
+            <div class="row">
+              <dt>Account type</dt>
+              <dd style="text-transform: capitalize;"><%= user.role || 'student' %></dd>
+            </div>
+            <div class="row">
+              <dt>Member since</dt>
+              <dd><%= joined %></dd>
+            </div>
+          </dl>
+          <div class="actions"><button class="btn" type="submit">Save changes</button></div>
+        </form>
+      </section>
+
+      <!-- Study settings -->
+      <section class="card">
+        <p class="label">STUDY SETTINGS</p>
+        <dl style="margin:0">
+          <div class="row">
+            <dt>Study time</dt>
+            <dd><%= user.availableStudyTimeHours ? user.availableStudyTimeHours + ' hours a day' : 'Not set yet' %></dd>
+          </div>
+          <div class="row">
+            <dt>Usual start time</dt>
+            <dd><%= clock(user.studyStartTime) %></dd>
+          </div>
+          <div class="row">
+            <dt>Session length</dt>
+            <dd><%= (user.sessionLengthMinutes || 60) %> minutes</dd>
+          </div>
+        </dl>
+        <div class="actions"><a class="btn light" href="/study-plan/availability">Edit study settings</a></div>
+      </section>
+
+      <!-- Totals -->
+      <section class="card">
+        <p class="label">YOUR PROGRESS</p>
+        <div class="stats">
+          <div class="stat"><b><%= stats.subjectCount %></b><span class="muted">Subjects</span></div>
+          <div class="stat"><b><%= stats.taskCount %></b><span class="muted">Tasks</span></div>
+          <div class="stat"><b><%= stats.completedCount %></b><span class="muted">Tasks completed</span></div>
+        </div>
+      </section>
+
+      <!-- Account -->
+      <section class="card">
+        <p class="label">ACCOUNT</p>
+        <form action="/logout" method="POST" style="margin:0">
+          <button class="btn danger" type="submit">Log out</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
