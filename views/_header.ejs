@@ -1,5 +1,5 @@
 <header class="sb-nav">
-  <a href="/planner" class="sb-brand" aria-label="StudyBuddy dashboard">
+  <a href="/study-plan" class="sb-brand" aria-label="StudyBuddy dashboard">
     <span class="sb-logo-box">✦</span>
     <span class="sb-wordmark"><span>Study</span><strong>Buddy</strong></span>
   </a>
@@ -7,5 +7,8 @@
   <div class="sb-user">
     <span class="sb-avatar">SB</span>
     <span><%= currentUser && (currentUser.name || currentUser.fullName || currentUser.email) ? (currentUser.name || currentUser.fullName || currentUser.email) : 'User' %></span>
+    <form action="/logout" method="POST" style="display:inline; margin-left: 12px;">
+      <button type="submit" class="sb-text-link" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;text-decoration:underline;">Log out</button>
+    </form>
   </div>
 </header>

@@ -93,11 +93,15 @@ app.get('/', (req, res) => {
 
 
 app.get('/login', (req, res) => {
+  // Already logged in? Skip straight to the study plan.
+  if (req.isAuthenticated()) return res.redirect('/study-plan');
   res.render('auth/login');
 });
 
 
 app.get('/register', (req, res) => {
+  // Already logged in? Skip straight to the study plan.
+  if (req.isAuthenticated()) return res.redirect('/study-plan');
   res.render('auth/register');
 });
 

@@ -51,7 +51,11 @@ function login(req, res, next) {
 function logout(req, res, next) {
   req.logout((err) => {
     if (err) return next(err);
-    req.session.destroy(() => res.redirect('/login'));
+    req.session.destroy(() => {
+      // Remove the session cookie from the browser as well.
+      res.clearCookie('connect.sid');
+      return res.redirect('/login');
+    });
   });
 }
 module.exports = { register, login, logout };

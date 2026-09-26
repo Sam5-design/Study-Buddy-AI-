@@ -1,15 +1,21 @@
 /**
- * Blocks a route unless the request has an authenticated session (FR-3).
+ * Route guard (FR-3): blocks a route unless the user is logged in.
  *
- * This file was empty on main. It's added here because the generate-plan
- * route needs it, and every other authenticated route will need the same
- * thing, this is the standard Passport session-based check, no project
- * specific decisions in it. Soumith, move it or adjust it if you'd
- * rather it live somewhere else.
+ * - Logged in            -> carry on to the route.
+ * - Browser page visit   -> send them to the login page.
+ * - JavaScript / API call (e.g. fetch from the Generate Plan button)
+ *                        -> reply with a 401 JSON message the page can show.
  */
 module.exports = function ensureAuth(req, res, next) {
   if (req.isAuthenticated && req.isAuthenticated()) {
     return next();
   }
+
+  const isPageVisit = req.method === 'GET' && req.accepts(['html', 'json']) === 'html';
+
+  if (isPageVisit) {
+    return res.redirect('/login');
+  }
+
   return res.status(401).json({ message: 'You need to be logged in to do that.' });
 };
