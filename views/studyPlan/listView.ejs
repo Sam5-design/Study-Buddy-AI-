@@ -20,6 +20,9 @@
   .sb-status.missed { background: #fbe3e1; color: #b3423a; }
   .sb-list-block.complete .sb-list-task { text-decoration: line-through; opacity: 0.6; }
   .sb-mark { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; color: var(--navy); }
+  .sb-focus { border: 1px solid var(--coral); background: var(--coral); border-radius: 999px; padding: 4px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; color: #fff; }
+  .sb-focus:hover { filter: brightness(0.95); }
+  .sb-studied { margin-top: 2px; font-size: 0.8rem; font-weight: 600; color: var(--green); }
 </style>
 
 <% planView.days.forEach(function (day) { %>
@@ -39,10 +42,19 @@
               · due <%= new Date(block.deadline).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) %>
             <% } %>
           </div>
+          <% if (block.actualMinutes > 0) { %>
+            <div class="sb-studied">Studied <%= block.actualMinutes %> min of <%= Math.round(block.allocatedHours * 60) %> min</div>
+          <% } %>
         </div>
         <span class="sb-list-time"><%= block.allocatedHours %>h</span>
         <span class="sb-status <%= block.status %>"><%= block.status %></span>
         <% if (block.blockId) { %>
+          <% if (block.status === 'scheduled') { %>
+            <button type="button" class="sb-focus"
+              data-block-id="<%= block.blockId %>"
+              data-title="<%= block.description %>"
+              data-minutes="<%= Math.round(block.allocatedHours * 60) %>">Focus</button>
+          <% } %>
           <form action="/study-plan/blocks/<%= block.blockId %>/complete" method="POST" style="margin:0">
             <button type="submit" class="sb-mark"><%= block.status === 'complete' ? 'Undo' : 'Mark done' %></button>
           </form>
@@ -51,3 +63,190 @@
     <% }); %>
   </section>
 <% }); %>
+
+<%# ---------- Focus Timer popup (Steps 4 and 5) ---------- %>
+<style>
+  .sb-timer-overlay { position: fixed; inset: 0; background: rgba(20, 35, 60, 0.45); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .sb-timer-overlay.open { display: flex; }
+  .sb-timer-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px 28px 22px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 18px 50px rgba(20, 35, 60, 0.25); }
+  .sb-timer-mode { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); }
+  .sb-timer-mode.is-break { color: var(--green); }
+  .sb-timer-task { font-family: 'Fraunces', serif; font-size: 1.3rem; margin: 6px 0 2px; }
+  .sb-timer-planned { color: var(--muted); font-size: 0.8rem; }
+  .sb-timer-clock { font-family: 'Fraunces', serif; font-size: 4rem; font-weight: 700; margin: 18px 0; color: var(--navy); }
+  .sb-timer-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .sb-timer-msg { min-height: 1.2em; margin-top: 12px; font-size: 0.8rem; font-weight: 600; color: var(--green); }
+  .sb-timer-msg.is-error { color: #b3423a; }
+  .sb-timer-close { margin-top: 10px; background: none; border: none; color: var(--muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; }
+</style>
+
+<div class="sb-timer-overlay" id="sb-timer" aria-hidden="true">
+  <div class="sb-timer-card" role="dialog" aria-modal="true" aria-labelledby="sb-timer-task">
+    <span class="sb-timer-mode" id="sb-timer-mode">Focus</span>
+    <div class="sb-timer-task" id="sb-timer-task"></div>
+    <div class="sb-timer-planned" id="sb-timer-planned"></div>
+    <div class="sb-timer-clock" id="sb-timer-clock">25:00</div>
+    <div class="sb-timer-actions">
+      <button type="button" class="sb-pill primary" id="sb-timer-start">Start</button>
+      <button type="button" class="sb-pill" id="sb-timer-reset">Reset</button>
+      <button type="button" class="sb-pill" id="sb-timer-save">Save time</button>
+    </div>
+    <div class="sb-timer-msg" id="sb-timer-msg"></div>
+    <button type="button" class="sb-timer-close" id="sb-timer-close">Close</button>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var FOCUS_MINUTES = 1;
+    var BREAK_MINUTES = 5;
+
+    var overlay = document.getElementById('sb-timer');
+    var modeLabel = document.getElementById('sb-timer-mode');
+    var taskLabel = document.getElementById('sb-timer-task');
+    var plannedLabel = document.getElementById('sb-timer-planned');
+    var clock = document.getElementById('sb-timer-clock');
+    var message = document.getElementById('sb-timer-msg');
+    var startButton = document.getElementById('sb-timer-start');
+    var resetButton = document.getElementById('sb-timer-reset');
+    var saveButton = document.getElementById('sb-timer-save');
+    var closeButton = document.getElementById('sb-timer-close');
+
+    var mode = 'focus';          // 'focus' or 'break'
+    var secondsLeft = FOCUS_MINUTES * 60;
+    var endTime = null;          // when the countdown will hit zero
+    var ticker = null;           // the repeating timer
+    var runStart = null;         // when the current focus run began
+    var studiedSeconds = 0;      // focus time that is not saved yet
+    var currentBlockId = null;   // which study session the timer is for
+    var savedSomething = false;  // did we save anything since opening?
+
+    function totalSeconds() {
+      return (mode === 'focus' ? FOCUS_MINUTES : BREAK_MINUTES) * 60;
+    }
+
+    function showMessage(text, isError) {
+      message.textContent = text;
+      message.className = 'sb-timer-msg' + (isError ? ' is-error' : '');
+    }
+
+    function draw() {
+      var m = Math.floor(secondsLeft / 60);
+      var s = secondsLeft % 60;
+      clock.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      modeLabel.textContent = mode === 'focus' ? 'Focus' : 'Break';
+      modeLabel.className = 'sb-timer-mode' + (mode === 'break' ? ' is-break' : '');
+      startButton.textContent = ticker ? 'Pause' : 'Start';
+    }
+
+    // Adds the focus time of the current run to the "not saved yet" total.
+    function bankTime() {
+      if (runStart !== null && mode === 'focus') {
+        studiedSeconds += (Date.now() - runStart) / 1000;
+      }
+      // If the timer is still running, keep counting from now. If not, stop counting.
+      runStart = ticker ? Date.now() : null;
+    }
+
+    function stopTicker() {
+      if (ticker) { clearInterval(ticker); ticker = null; }
+    }
+
+    // Sends the whole minutes studied so far to the server.
+    function saveTime() {
+      bankTime();
+      // The + 5 forgives tiny timing gaps, so 24m 58s counts as 25 minutes.
+      var minutes = Math.floor((studiedSeconds + 5) / 60);
+      if (minutes < 1) {
+        showMessage('Study for at least 1 minute to save time.', true);
+        return Promise.resolve(false);
+      }
+      return fetch('/study-plan/blocks/' + currentBlockId + '/focus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes: minutes })
+      }).then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok) throw new Error(payload.message || 'Could not save.');
+          studiedSeconds = Math.max(0, studiedSeconds - minutes * 60);
+          savedSomething = true;
+          showMessage('Saved. Total for this session: ' + payload.actualMinutes + ' min');
+          return true;
+        });
+      }).catch(function (error) {
+        showMessage(error.message || 'Could not save. Try again.', true);
+        return false;
+      });
+    }
+
+    function tick() {
+      // Compare against the clock time so the timer stays right even if the tab is in the background.
+      secondsLeft = Math.max(0, Math.round((endTime - Date.now()) / 1000));
+      if (secondsLeft === 0) {
+        stopTicker();
+        var finishedFocus = mode === 'focus';
+        bankTime();
+        // Focus finished: move to the break. Break finished: back to focus.
+        mode = finishedFocus ? 'break' : 'focus';
+        secondsLeft = totalSeconds();
+        if (finishedFocus) saveTime();   // save automatically when a focus round ends
+      }
+      draw();
+    }
+
+    function startOrPause() {
+      if (ticker) {
+        stopTicker();                       // pause
+        bankTime();
+      } else {
+        endTime = Date.now() + secondsLeft * 1000;
+        runStart = Date.now();
+        ticker = setInterval(tick, 250);    // start
+      }
+      draw();
+    }
+
+    function reset() {
+      stopTicker();
+      bankTime();
+      mode = 'focus';
+      secondsLeft = FOCUS_MINUTES * 60;
+      draw();
+    }
+
+    function openTimer(button) {
+      studiedSeconds = 0;
+      savedSomething = false;
+      currentBlockId = button.getAttribute('data-block-id');
+      reset();
+      showMessage('');
+      taskLabel.textContent = button.getAttribute('data-title');
+      plannedLabel.textContent = 'Planned: ' + button.getAttribute('data-minutes') + ' min';
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeTimer() {
+      // Save any whole minutes not saved yet, then close.
+      stopTicker();
+      bankTime();
+      var finish = function () {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        if (savedSomething) window.location.reload();
+      };
+      if (studiedSeconds >= 55) { saveTime().then(finish); } else { finish(); }
+    }
+
+    document.querySelectorAll('.sb-focus').forEach(function (button) {
+      button.addEventListener('click', function () { openTimer(button); });
+    });
+    startButton.addEventListener('click', startOrPause);
+    resetButton.addEventListener('click', reset);
+    saveButton.addEventListener('click', saveTime);
+    closeButton.addEventListener('click', closeTimer);
+    overlay.addEventListener('click', function (event) {
+      if (event.target === overlay) closeTimer();
+    });
+  })();
+</script>

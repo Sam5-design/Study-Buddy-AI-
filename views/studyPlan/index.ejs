@@ -269,6 +269,7 @@
                 <p class="sb-side-label" style="margin:0">WEEKLY PROGRESS</p>
                 <div class="sb-stat-big"><%= dashboard.weeklyPercent %>%</div>
                 <div class="sb-stat-small"><%= dashboard.completedHours %>h of <%= dashboard.plannedHours %>h planned this week</div>
+                <div class="sb-stat-small">Studied with Focus Timer: <%= dashboard.studiedLabel %></div>
               </div>
               <%- ring(dashboard.weeklyPercent, 'var(--coral)', 64) %>
             </div>

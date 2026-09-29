@@ -85,6 +85,7 @@ function buildPlanViewModel(plan) {
       subjectCode: subject.code || '',
       subjectColour: subject.colour || '#26a69a',
       allocatedHours: block.allocatedHours,
+      actualMinutes: block.actualMinutes || 0,
       status: block.status,
       deadline: task.deadline || null,
     });

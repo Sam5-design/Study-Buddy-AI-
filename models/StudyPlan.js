@@ -27,6 +27,13 @@ const scheduleBlockSchema = new mongoose.Schema({
     enum: ['scheduled', 'complete', 'missed'],
     default: 'scheduled',
   },
+  // Focus Timer: minutes the student really studied in this block.
+  // Optional, so plans created before this feature still work.
+  actualMinutes: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
 }, { _id: true });
 
 // A record of why the plan changed, written every time the engine re-runs (FR-15).
