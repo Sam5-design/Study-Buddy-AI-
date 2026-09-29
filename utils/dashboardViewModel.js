@@ -28,6 +28,14 @@ function formatClock(totalMinutes) {
   return `${h12}:${String(m).padStart(2, '0')} ${suffix}`;
 }
 
+// Turns 130 into '2h 10m', 45 into '45m', 0 into '0m'.
+function formatMinutes(total) {
+  const h = Math.floor(total / 60);
+  const m = Math.round(total % 60);
+  if (h && m) return `${h}h ${m}m`;
+  return h ? `${h}h` : `${m}m`;
+}
+
 function formatHourLabel(totalMinutes) {
   const h24 = Math.floor(totalMinutes / 60) % 24;
   const suffix = h24 >= 12 ? 'PM' : 'AM';
@@ -66,6 +74,7 @@ function buildDashboardViewModel(planView, { studyStartTime, weekOffset = 0, upc
   let latest = startMinutes + 4 * 60; // always show at least 4 hours
   let plannedHours = 0;
   let completedHours = 0;
+  let studiedMinutes = 0;
 
   const weekDays = [];
   for (let i = 0; i < 7; i += 1) {
@@ -82,6 +91,7 @@ function buildDashboardViewModel(planView, { studyStartTime, weekOffset = 0, upc
       cursor = end;
 
       plannedHours += block.allocatedHours;
+      studiedMinutes += block.actualMinutes || 0;
       if (block.status === 'complete') completedHours += block.allocatedHours;
 
       return {
@@ -175,6 +185,7 @@ function buildDashboardViewModel(planView, { studyStartTime, weekOffset = 0, upc
     hourLabels,
     plannedHours,
     completedHours,
+    studiedLabel: formatMinutes(studiedMinutes),
     weeklyPercent: plannedHours ? Math.round((completedHours / plannedHours) * 100) : 0,
     nextDeadline,
     subjectDeadlines,
