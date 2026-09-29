@@ -39,6 +39,20 @@ async function generatePlan({
     throw new Error('availableStudyTimeHours must be a positive number.');
   }
 
+
+  // Every task needs a real deadline and a positive effort estimate.
+  // Without these the slack becomes NaN ("not a number"), which silently
+  // breaks the sort (a far-off task can jump ahead of an urgent one) or
+  // drops the task from the plan. Reject clearly instead.
+  for (const task of tasks) {
+    if (!task.deadline || Number.isNaN(new Date(task.deadline).getTime())) {
+      throw new Error(`Task ${task._id} is missing a valid deadline.`);
+    }
+    if (typeof task.estimatedEffortHours !== 'number' || !(task.estimatedEffortHours > 0)) {
+      throw new Error(`Task ${task._id} must have a positive estimatedEffortHours.`);
+    }
+  }
+
   const start = new Date(startDate);
 
   const scored = tasks.map((task) => {
