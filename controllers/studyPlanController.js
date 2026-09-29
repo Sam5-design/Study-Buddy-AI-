@@ -206,6 +206,33 @@ async function exportCalendar(req, res, next) {
   }
 }
 
+/**
+ * POST /study-plan/blocks/:blockId/focus
+ * Focus Timer: save the minutes the student really studied in one block.
+ * If the timer is used more than once on a block, the minutes add up.
+ */
+async function saveFocusMinutes(req, res, next) {
+  try {
+    const minutes = Math.round(Number(req.body.minutes));
+    if (!Number.isFinite(minutes) || minutes < 1 || minutes > 240) {
+      return res.status(400).json({ message: 'Minutes must be a number between 1 and 240.' });
+    }
+
+    const plan = await StudyPlan.findOne({ user: req.user.id, status: 'active' });
+    const block = plan && plan.blocks.id(req.params.blockId);
+    if (!block) {
+      return res.status(404).json({ message: 'That study session could not be found.' });
+    }
+
+    block.actualMinutes = (block.actualMinutes || 0) + minutes;
+    await plan.save();
+
+    return res.status(200).json({ actualMinutes: block.actualMinutes });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   exportCalendar,
   showStudyPlan,
@@ -213,4 +240,5 @@ module.exports = {
   showAvailability,
   saveAvailability,
   toggleBlockComplete,
+  saveFocusMinutes,
 };
