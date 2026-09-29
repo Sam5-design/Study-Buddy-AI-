@@ -56,6 +56,33 @@ const taskSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  // Sprint 2: free-text notes and resource links (lecture slides, readings).
+  notes: {
+    type: String,
+    trim: true,
+    maxlength: [2000, 'Notes cannot exceed 2000 characters.'],
+    default: '',
+  },
+  links: {
+    type: [String],
+    default: [],
+    validate: {
+      // Only web links. A javascript: link would run code when clicked.
+      validator: (arr) => arr.every((url) => /^https?:\/\//i.test(url)),
+      message: 'Links must start with http:// or https://',
+    },
+  },
+  // Sprint 2: weekly repeating tasks. Every task in one series shares the
+  // same recurrenceGroupId, which is how "edit all" and "delete all" find them.
+  recurrenceGroupId: {
+    type: String,
+    default: null,
+    index: true,
+  },
+  repeatUntil: {
+    type: Date,
+    default: null,
+  },
 }, {
   timestamps: true,
 });

@@ -45,6 +45,29 @@
           <label><input type="radio" name="status" value="complete" <%= formData.status === 'complete' ? 'checked' : '' %> />Finished</label>
         </div>
 
+        <label class="f" for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="4" maxlength="2000" placeholder="Anything you want to remember for this task"><%= formData.notes || '' %></textarea>
+
+        <label class="f" for="links">Resource links (one per line)</label>
+        <textarea id="links" name="links" rows="3" placeholder="https://..."><%= formData.links || '' %></textarea>
+
+        <% if (task.links && task.links.length) { %>
+          <div style="margin-top:8px; font-size:0.85rem;">
+            <% task.links.forEach(function (link) { %>
+              <div><a href="<%= link %>" target="_blank" rel="noopener noreferrer"><%= link %></a></div>
+            <% }); %>
+          </div>
+        <% } %>
+
+        <% if (task.recurrenceGroupId) { %>
+          <label class="f">This task repeats weekly. Apply changes to:</label>
+          <div class="pills">
+            <label><input type="radio" name="scope" value="one" <%= formData.scope !== 'all' ? 'checked' : '' %> />Only this task</label>
+            <label><input type="radio" name="scope" value="all" <%= formData.scope === 'all' ? 'checked' : '' %> />All tasks in this series</label>
+          </div>
+          <p class="muted" style="font-size:0.8rem;">"All" updates the name, effort and priority. Each repeat keeps its own deadline and status.</p>
+        <% } %>
+
         <p class="muted" style="font-size:0.8rem; margin-top:14px;">Saving will update your study plan automatically.</p>
 
         <div class="actions" style="margin-top:8px;">

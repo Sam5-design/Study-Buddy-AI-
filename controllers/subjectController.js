@@ -1,6 +1,11 @@
 const Subject = require('../models/Subject');
 const Task = require('../models/Task');
 const { recalculateIfPlanExists } = require('../services/studyPlanService');
+const { randomUUID } = require('crypto');
+
+// Upper limit on weekly repeats (about half a year), so one form
+// submission can't create thousands of tasks.
+const MAX_REPEATS = 26;
 
 
 // ======================================================
@@ -521,6 +526,51 @@ async function createTask(req, res, next) {
     }
 
 
+    // -----------------------------
+    // Repeat weekly (Sprint 2)
+    // -----------------------------
+
+    const repeatWeekly =
+      Boolean(req.body.repeatWeekly);
+
+    let repeatUntil = null;
+
+    if (repeatWeekly) {
+
+      repeatUntil =
+        new Date(req.body.repeatUntil);
+
+      if (
+        !req.body.repeatUntil ||
+        Number.isNaN(repeatUntil.getTime())
+      ) {
+
+        errors.push(
+          'Please choose a "Repeat until" date.'
+        );
+
+      } else {
+
+        // Include the whole last day, otherwise a 5pm deadline
+        // on the "repeat until" day would be skipped.
+        repeatUntil.setHours(23, 59, 59, 999);
+
+        if (
+          deadline &&
+          repeatUntil < new Date(deadline)
+        ) {
+
+          errors.push(
+            '"Repeat until" must be on or after the first deadline.'
+          );
+
+        }
+
+      }
+
+    }
+
+
     // ==================================================
     // VALIDATION FAILED
     // ==================================================
@@ -552,25 +602,68 @@ async function createTask(req, res, next) {
     // CREATE TASK
     // ==================================================
 
-    const task =
-      await Task.create({
+    const baseTask = {
 
-        user: req.user.id,
+      user: req.user.id,
 
-        subject: subjectId,
+      subject: subjectId,
 
-        description:
-          description.trim(),
+      description:
+        description.trim(),
 
-        deadline,
+      estimatedEffortHours:
+        effort,
 
-        estimatedEffortHours:
-          effort,
+      priority:
+        taskPriority
 
-        priority:
-          taskPriority
+    };
 
-      });
+
+    let task;
+
+    if (repeatWeekly) {
+
+      // One task per week, all sharing a series id, up to the
+      // "repeat until" date.
+      const recurrenceGroupId =
+        randomUUID();
+
+      const repeats = [];
+
+      const nextDeadline =
+        new Date(deadline);
+
+      while (
+        nextDeadline <= repeatUntil &&
+        repeats.length < MAX_REPEATS
+      ) {
+
+        repeats.push({
+          ...baseTask,
+          deadline: new Date(nextDeadline),
+          recurrenceGroupId,
+          repeatUntil
+        });
+
+        nextDeadline.setDate(
+          nextDeadline.getDate() + 7
+        );
+
+      }
+
+      [task] =
+        await Task.insertMany(repeats);
+
+    } else {
+
+      task =
+        await Task.create({
+          ...baseTask,
+          deadline
+        });
+
+    }
 
 
     // ==================================================

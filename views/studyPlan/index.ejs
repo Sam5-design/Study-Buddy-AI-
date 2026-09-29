@@ -247,6 +247,8 @@
                   <a href="/study-plan?view=calendar" class="<%= currentView === 'calendar' ? 'active' : '' %>">Calendar</a>
                   <a href="/study-plan?view=list" class="<%= currentView === 'list' ? 'active' : '' %>">List</a>
                 </div>
+                <!-- Sprint 2: download the plan for Google Calendar / Outlook -->
+                <a class="sb-pill" href="/study-plan/export.ics" download title="Download as a calendar file">⤓ Export to calendar</a>
                 <button class="sb-pill primary" id="generate-plan">Regenerate</button>
               </div>
             </div>

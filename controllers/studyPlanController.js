@@ -5,6 +5,7 @@ const { buildDashboardViewModel } = require('../utils/dashboardViewModel');
 const StudyPlan = require('../models/StudyPlan');
 const { regeneratePlan, recalculateIfPlanExists } = require('../services/studyPlanService');
 const { buildPlanViewModel } = require('../utils/planViewModel');
+const { buildICS } = require('../utils/icsExport');
 
 /**
  * GET /study-plan
@@ -179,7 +180,34 @@ async function toggleBlockComplete(req, res, next) {
   }
 }
 
+/**
+ * GET /study-plan/export.ics
+ * Sprint 2: downloads the student's active plan as a calendar file that
+ * Google Calendar and Outlook can import. Uses the same day grouping and
+ * start time as the dashboard, so the exported times match the screen.
+ */
+async function exportCalendar(req, res, next) {
+  try {
+    const plan = await StudyPlan.findOne({ user: req.user.id, status: 'active' })
+      .populate('blocks.task', 'description deadline status')
+      .populate('blocks.subject', 'name code colour');
+
+    if (!plan || plan.blocks.length === 0) {
+      return res.status(404).send('No study plan to export yet. Generate a plan first.');
+    }
+
+    const ics = buildICS(buildPlanViewModel(plan), req.user.studyStartTime);
+
+    res.set('Content-Type', 'text/calendar; charset=utf-8');
+    res.set('Content-Disposition', 'attachment; filename="study-plan.ics"');
+    return res.send(ics);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
+  exportCalendar,
   showStudyPlan,
   generateStudyPlan,
   showAvailability,

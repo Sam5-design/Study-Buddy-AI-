@@ -7,6 +7,7 @@ const {
   showAvailability,
   saveAvailability,
   toggleBlockComplete,
+  exportCalendar,
 } = require('../controllers/studyPlanController');
 
 // FR-16: render the student's current plan.
@@ -22,5 +23,8 @@ router.post('/availability', ensureAuth, saveAvailability);
 
 // FR-13: mark a study block done (or undo it).
 router.post('/blocks/:blockId/complete', ensureAuth, toggleBlockComplete);
+
+// Sprint 2: download the active plan as a calendar file (.ics).
+router.get('/export.ics', ensureAuth, exportCalendar);
 
 module.exports = router;

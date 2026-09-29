@@ -163,6 +163,8 @@ async function showEditTask(req, res, next) {
         estimatedEffortHours: task.estimatedEffortHours,
         priority: task.priority,
         status: task.status,
+        notes: task.notes || '',
+        links: (task.links || []).join('\n'),
       },
       errors: [],
     });
@@ -182,8 +184,20 @@ async function updateTask(req, res, next) {
     const status = req.body.status === 'complete' ? 'complete' : 'pending';
     const deadline = new Date(req.body.deadline);
 
+    // Notes and links (Sprint 2). Links come from a textarea, one per line.
+    const notes = String(req.body.notes || '').trim();
+    const links = String(req.body.links || '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const editAll = req.body.scope === 'all' && Boolean(task.recurrenceGroupId);
+
     const errors = [];
     if (!description) errors.push('Task description is required.');
+    if (notes.length > 2000) errors.push('Notes cannot exceed 2000 characters.');
+    if (links.some((l) => !/^https?:\/\//i.test(l))) {
+      errors.push('Links must start with http:// or https://');
+    }
     if (description.length > 300) errors.push('Task description cannot exceed 300 characters.');
     if (Number.isNaN(deadline.getTime())) {
       errors.push('Please enter a valid deadline.');
@@ -218,7 +232,19 @@ async function updateTask(req, res, next) {
     task.estimatedEffortHours = effort;
     task.priority = priority;
     task.status = status;
+    task.notes = notes;
+    task.links = links;
     await task.save();
+
+    // "All tasks in this series": copy the shared details to the other
+    // repeats. Deadline and status stay per task, because each repeat has
+    // its own due date and its own progress.
+    if (editAll) {
+      await Task.updateMany(
+        { recurrenceGroupId: task.recurrenceGroupId, user: req.user.id, _id: { $ne: task._id } },
+        { $set: { description, estimatedEffortHours: effort, priority } }
+      );
+    }
 
     // Only reschedule if something that affects the plan changed.
     const affectsPlan = before.deadline !== deadline.getTime() || before.effort !== effort
@@ -250,6 +276,27 @@ async function deleteTask(req, res, next) {
   }
 }
 
+// Deletes every task in a weekly series (Sprint 2, recurring tasks).
+async function deleteTaskSeries(req, res, next) {
+  try {
+    const { task } = await findOwnedTask(req);
+    if (!task || !task.recurrenceGroupId) return res.status(404).send('Task not found.');
+
+    const result = await Task.deleteMany({
+      recurrenceGroupId: task.recurrenceGroupId,
+      user: req.user.id,
+    });
+
+    const recalculated = await recalculateIfPlanExists(
+      req.user,
+      `Repeating task "${task.description}" was deleted.`
+    );
+    return afterChange(res, recalculated, `${result.deletedCount} repeats of "${task.description}" were deleted.`);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   listSubjects,
   showEditSubject,
@@ -258,4 +305,5 @@ module.exports = {
   showEditTask,
   updateTask,
   deleteTask,
+  deleteTaskSeries,
 };

@@ -58,6 +58,7 @@ router.post('/:subjectId/delete', ensureAuth, manage.deleteSubject);
 router.get('/:subjectId/tasks/:taskId/edit', ensureAuth, manage.showEditTask);
 router.post('/:subjectId/tasks/:taskId/edit', ensureAuth, manage.updateTask);
 router.post('/:subjectId/tasks/:taskId/delete', ensureAuth, manage.deleteTask);
+router.post('/:subjectId/tasks/:taskId/delete-series', ensureAuth, manage.deleteTaskSeries);
 
 
 module.exports = router;

@@ -338,6 +338,45 @@
 
 
       <!-- ==================================================
+           REPEAT WEEKLY (Sprint 2)
+           ================================================== -->
+
+      <label class="sb-field-label">
+        Repeat
+      </label>
+
+      <p>
+        <label>
+          <input
+            type="checkbox"
+            id="repeatWeekly"
+            name="repeatWeekly"
+            <%= formData.repeatWeekly ? 'checked' : '' %>
+          >
+          <span>Repeat weekly (e.g. weekly quiz or lab report)</span>
+        </label>
+      </p>
+
+      <div class="input-field">
+
+        <input
+          id="repeatUntil"
+          name="repeatUntil"
+          type="date"
+          value="<%= formData.repeatUntil || '' %>"
+        >
+
+        <label
+          for="repeatUntil"
+          class="active"
+        >
+          Repeat until
+        </label>
+
+      </div>
+
+
+      <!-- ==================================================
            CREATE TASK
            ================================================== -->
 
