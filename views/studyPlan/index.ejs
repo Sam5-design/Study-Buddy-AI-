@@ -100,7 +100,7 @@
       .sb-toggle a { padding: 6px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
       .sb-toggle a.active { background: var(--navy); color: #fff; }
 
-      .sb-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+      .sb-bottom { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
       .sb-stat { background: var(--sand); border-radius: 18px; padding: 20px 22px; }
       .sb-stat-big { font-family: 'Fraunces', serif; font-size: 1.8rem; margin: 6px 0 2px; }
       .sb-stat-small { color: var(--muted); font-size: 0.8rem; }
@@ -148,6 +148,7 @@
           <a href="/study-plan" class="active">▦ Plan</a>
           <a href="/subjects">◈ Subjects</a>
           <a href="/study-plan/availability">◷ Study time</a>
+          <a href="/progress">↗ Progress</a>
           <a href="/profile">👤 Profile</a>
         </nav>
 
@@ -273,6 +274,21 @@
               </div>
               <%- ring(dashboard.weeklyPercent, 'var(--coral)', 64) %>
             </div>
+            <div class="sb-stat" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+              <div>
+                <p class="sb-side-label" style="margin:0">STUDY STREAK</p>
+                <% if (streaks.currentStreak > 0) { %>
+                  <div class="sb-stat-big">🔥 <%= streaks.currentStreak %> day<%= streaks.currentStreak === 1 ? '' : 's' %></div>
+                  <div class="sb-stat-small"><%= streaks.currentStreak === 1 ? 'You studied today. Keep it going.' : 'You studied on ' + streaks.currentStreak + ' days in a row.' %></div>
+                <% } else { %>
+                  <div class="sb-stat-big">🔥 Start a streak</div>
+                  <div class="sb-stat-small">Complete a study block to begin.</div>
+                <% } %>
+                <a href="/progress#streaks-heading" style="display:inline-block;margin-top:8px;color:var(--coral);font-size:.78rem;font-weight:600;">View badges →</a>
+              </div>
+            </div>
+
+
 
             <div class="sb-stat" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
               <div style="min-width:0">

@@ -1,0 +1,245 @@
+<%
+  function clock(hhmm) {
+    var p = String(hhmm || '18:00').split(':');
+    var h = Number(p[0]);
+    return ((h % 12) || 12) + ':' + p[1] + (h >= 12 ? ' PM' : ' AM');
+  }
+  function formatHours(value) {
+    var n = Number(value) || 0;
+    return (Math.round(n * 10) / 10).toFixed(n % 1 === 0 ? 0 : 1) + 'h';
+  }
+  var displayName = (user && (user.fullName || user.email)) || 'Student';
+  var initials = displayName.split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+  var subjectCount = stats.subjectStats.length;
+%>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Study Buddy progress statistics." />
+    <title>Progress Stats — Study Buddy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/progress.css" />
+  </head>
+  <body>
+    <div class="progress-app">
+      <div class="mobile-topbar">
+        <a class="brand" href="/study-plan" aria-label="Study Buddy dashboard">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Study<span>Buddy</span></span>
+        </a>
+        <button class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="app-sidebar" aria-label="Open navigation">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+      <aside class="app-sidebar" id="app-sidebar" aria-label="Study Buddy navigation">
+        <a class="brand sidebar-brand" href="/study-plan" aria-label="Study Buddy dashboard">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Study<span>Buddy</span></span>
+        </a>
+
+        <nav class="sidebar-nav">
+          <a href="/study-plan"><span class="nav-icon" aria-hidden="true">▦</span>Plan</a>
+          <a href="/subjects"><span class="nav-icon" aria-hidden="true">◈</span>Subjects</a>
+          <a href="/study-plan/availability"><span class="nav-icon" aria-hidden="true">◷</span>Study time</a>
+          <a class="active" href="/progress" aria-current="page"><span class="nav-icon" aria-hidden="true">↗</span>Progress</a>
+          <a href="/profile"><span class="nav-icon" aria-hidden="true">◯</span>Profile</a>
+        </nav>
+
+        <div class="sidebar-availability">
+          <p class="side-label">YOUR AVAILABILITY</p>
+          <% if (user.availableStudyTimeHours) { %>
+            <div><strong><%= user.availableStudyTimeHours %> h</strong> a day</div>
+            <div>from <%= clock(user.studyStartTime) %></div>
+          <% } else { %>
+            <div>Not set yet</div>
+          <% } %>
+          <a href="/study-plan/availability">Edit times ↗</a>
+        </div>
+
+        <form class="sidebar-logout" action="/logout" method="POST">
+          <button type="submit">Log out</button>
+        </form>
+      </aside>
+
+      <main class="progress-main" id="progress">
+        <header class="page-header">
+          <div>
+            <p class="overline">Your progress</p>
+            <h1>Study progress</h1>
+            <p class="header-subtitle">See where your study time is going and how much you’ve completed.</p>
+          </div>
+
+          <details class="profile-menu-wrap">
+            <summary class="user-avatar" title="<%= displayName %>" aria-label="Open profile menu"><%= initials %></summary>
+            <div class="profile-popover">
+              <div class="profile-popover-head">
+                <strong><%= displayName %></strong>
+                <span><%= user.email %></span>
+              </div>
+              <a href="/profile">👤 Personal details</a>
+              <a href="/study-plan/availability">◷ Study settings</a>
+              <form action="/logout" method="POST"><button type="submit">↪ Log out</button></form>
+            </div>
+          </details>
+        </header>
+
+        <section class="summary-grid" aria-label="Weekly progress summary">
+          <article class="summary-card hours-card">
+            <div class="summary-card-top"><span class="summary-label">Hours studied</span><span class="summary-icon" aria-hidden="true">◷</span></div>
+            <strong><%= formatHours(stats.totalHoursStudied) %></strong>
+            <span class="summary-support"><%= stats.totalPlannedHours ? formatHours(stats.totalPlannedHours) + ' planned this week' : 'This week' %></span>
+            <div class="mini-progress coral-progress"><span style="width: <%= stats.hoursPercent %>%"></span></div>
+          </article>
+
+          <article class="summary-card tasks-card">
+            <div class="summary-card-top"><span class="summary-label">Tasks finished</span><span class="summary-icon" aria-hidden="true">✓</span></div>
+            <strong><%= stats.tasksFinished %></strong>
+            <span class="summary-support"><%= stats.totalTasksThisWeek ? 'of ' + stats.totalTasksThisWeek + ' tasks this week' : 'No tasks counted this week' %></span>
+            <div class="mini-progress green-progress"><span style="width: <%= stats.completionPercent %>%"></span></div>
+          </article>
+
+          <article class="summary-card completion-card">
+            <div class="summary-card-top"><span class="summary-label">Task completion</span><span class="summary-icon" aria-hidden="true">✦</span></div>
+            <strong><%= stats.completionPercent %>%</strong>
+            <span class="summary-support"><%= stats.tasksRemaining %> task<%= stats.tasksRemaining === 1 ? '' : 's' %> remaining</span>
+            <div class="mini-progress navy-progress"><span style="width: <%= stats.completionPercent %>%"></span></div>
+          </article>
+        </section>
+
+        <section class="analytics-grid" aria-label="Study analytics">
+          <article class="panel subject-hours-panel">
+            <div class="panel-heading">
+              <div><h2>Hours studied by subject</h2><p>This week</p></div>
+              <span class="panel-period"><%= stats.weekLabel %></span>
+            </div>
+
+            <% if (!subjectCount) { %>
+              <div class="empty-chart">Add a subject to start tracking study time.</div>
+            <% } else { %>
+              <div class="subject-chart" role="img" aria-label="Horizontal bar chart showing hours studied by subject">
+                <% stats.subjectStats.forEach(function (subject) { %>
+                  <div class="bar-row">
+                    <div class="bar-label"><span class="subject-dot" style="background:<%= subject.colour %>"></span><strong><%= subject.code %></strong></div>
+                    <div class="bar-track"><span class="bar-fill" style="width:<%= subject.barPercent %>%;background:<%= subject.colour %>"></span></div>
+                    <strong class="bar-value"><%= formatHours(subject.hoursStudied) %></strong>
+                  </div>
+                <% }); %>
+              </div>
+            <% } %>
+
+            <div class="chart-footer"><span><i class="legend-dot coral-legend"></i>Focused time</span><span><%= formatHours(stats.totalHoursStudied) %> total</span></div>
+          </article>
+
+          <article class="panel task-panel">
+            <div class="panel-heading">
+              <div><h2>Tasks this week</h2><p><%= stats.totalTasksThisWeek ? 'Weekly progress' : 'Nothing due yet' %></p></div>
+              <span class="panel-spark" aria-hidden="true">✦</span>
+            </div>
+            <div class="donut-wrap">
+              <div class="donut" style="background:conic-gradient(var(--coral) 0 <%= stats.completionPercent %>%, #ebe4da <%= stats.completionPercent %>% 100%)" role="img" aria-label="<%= stats.completionPercent %> percent of this week's tasks completed">
+                <div><strong><%= stats.completionPercent %>%</strong><span>complete</span></div>
+              </div>
+            </div>
+            <div class="task-counts"><div><strong><%= stats.tasksFinished %></strong><span>Completed</span></div><div><strong><%= stats.tasksRemaining %></strong><span>Still to do</span></div></div>
+            <p class="task-caption">
+              <% if (stats.totalTasksThisWeek) { %>
+                You’ve completed <%= stats.tasksFinished %> of <%= stats.totalTasksThisWeek %> tasks.
+              <% } else { %>
+                No tasks are due or completed this week yet.
+              <% } %>
+            </p>
+          </article>
+        </section>
+
+        <section class="streak-badges-section" aria-labelledby="streaks-heading">
+          <div class="section-heading streak-section-heading">
+            <div>
+              <p class="overline">Small wins, added up</p>
+              <h2 id="streaks-heading">Study streaks &amp; badges</h2>
+            </div>
+          </div>
+
+          <div class="streak-badges-grid">
+            <article class="streak-card">
+              <div class="summary-card-top">
+                <span class="summary-label">Current streak</span>
+                <span class="streak-icon" aria-hidden="true">🔥</span>
+              </div>
+
+              <% if (streaks.currentStreak > 0) { %>
+                <strong class="streak-value">🔥 <%= streaks.currentStreak %> day<%= streaks.currentStreak === 1 ? '' : 's' %> streak</strong>
+                <p>You studied on <%= streaks.currentStreak %> day<%= streaks.currentStreak === 1 ? '' : 's' %> in a row.</p>
+                <div class="streak-card-footer"><span>Keep it going</span><span aria-hidden="true">→</span></div>
+              <% } else { %>
+                <strong class="streak-value">Start your streak</strong>
+                <p>Complete a study block to begin building a daily study streak.</p>
+                <div class="streak-card-footer"><span>Your next session counts</span><span aria-hidden="true">→</span></div>
+              <% } %>
+            </article>
+
+            <article class="panel badges-panel" aria-labelledby="badges-heading">
+              <div class="badges-heading">
+                <div>
+                  <h3 id="badges-heading">Badges</h3>
+                  <p>Earned as you build your rhythm.</p>
+                </div>
+                <span class="badge-count"><%= streaks.earnedCount %> of <%= streaks.badges.length %> earned</span>
+              </div>
+
+              <div class="badge-grid">
+                <% streaks.badges.forEach(function (badge) { %>
+                  <div class="badge-card <%= badge.earned ? 'earned' : 'locked' %>">
+                    <span class="badge-mark" aria-hidden="true"><%= badge.symbol %></span>
+                    <div class="badge-copy">
+                      <strong><%= badge.name %></strong>
+                      <span><%= badge.description %></span>
+                    </div>
+                    <span class="badge-status <%= badge.earned ? '' : 'locked-status' %>"><%= badge.earned ? 'Earned' : 'Locked' %></span>
+                  </div>
+                <% }); %>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="subject-breakdown" aria-labelledby="breakdown-heading">
+          <div class="section-heading">
+            <div><p class="overline">This week by subject</p><h2 id="breakdown-heading">Subject breakdown</h2></div>
+            <a href="/subjects" class="quiet-link">View subjects <span aria-hidden="true">→</span></a>
+          </div>
+
+          <% if (!subjectCount) { %>
+            <article class="panel empty-chart">No subjects yet. <a class="quiet-link" href="/subjects/new">Add your first subject →</a></article>
+          <% } else { %>
+            <div class="subject-card-grid">
+              <% stats.subjectStats.forEach(function (subject) { %>
+                <article class="subject-card">
+                  <div class="subject-card-accent" style="background:<%= subject.colour %>"></div>
+                  <div class="subject-card-heading"><strong><%= subject.code %></strong><span class="subject-menu" aria-hidden="true">•••</span></div>
+                  <div class="subject-card-stats">
+                    <div><strong><%= formatHours(subject.hoursStudied) %></strong><span>studied this week</span></div>
+                    <div><strong><%= subject.tasksCompleted %></strong><span>task<%= subject.tasksCompleted === 1 ? '' : 's' %> done</span></div>
+                  </div>
+                  <div class="subject-card-foot simple"><span><%= subject.name %></span><a href="/subjects">View →</a></div>
+                </article>
+              <% }); %>
+            </div>
+          <% } %>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/progress.js"></script>
+    <script>
+      document.addEventListener('click', function (event) {
+        var menu = document.querySelector('.profile-menu-wrap');
+        if (menu && menu.open && !menu.contains(event.target)) menu.open = false;
+      });
+    </script>
+  </body>
+</html>

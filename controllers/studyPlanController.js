@@ -2,6 +2,7 @@ const Task = require('../models/Task');
 const User = require('../models/User');
 const Subject = require('../models/Subject');
 const { buildDashboardViewModel } = require('../utils/dashboardViewModel');
+const { buildStreakViewModel } = require('../utils/streakViewModel');
 const StudyPlan = require('../models/StudyPlan');
 const { regeneratePlan, recalculateIfPlanExists } = require('../services/studyPlanService');
 const { buildPlanViewModel } = require('../utils/planViewModel');
@@ -51,12 +52,15 @@ async function showStudyPlan(req, res, next) {
       today,
     });
 
+    const streaks = buildStreakViewModel({ plan, today });
+
     // "What changed" notes from the latest regeneration (FR-15).
     const changes = plan && req.query.regenerated
       ? plan.adjustments.map((a) => a.note).filter(Boolean)
       : [];
 
     return res.render('studyPlan/index', {
+      streaks,
       planView,
       changes,
       dashboard,

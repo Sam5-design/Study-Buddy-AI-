@@ -14,6 +14,7 @@ const studyPlanRoutes = require('./routes/studyPlan');
 const authRoutes = require('./routes/auth');
 const subjectRoutes = require('./routes/subjects');
 const profileRoutes = require('./routes/profile');
+const progressRoutes = require('./routes/progress');
 
 const ensureAuth = require('./middleware/ensureAuth');
 
@@ -223,6 +224,13 @@ app.use(
 // ======================================================
 
 app.use('/profile', profileRoutes);
+
+
+// ======================================================
+// PROGRESS STATS
+// ======================================================
+
+app.use('/progress', progressRoutes);
 
 
 // ======================================================
