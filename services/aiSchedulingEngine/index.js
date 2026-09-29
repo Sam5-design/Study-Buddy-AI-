@@ -14,6 +14,8 @@
  *   availableStudyTimeHours  Number > 0. Hours per day the student has
  *                             free to study.
  *   startDate                Date. The first day the plan should cover.
+ *   unavailableDates         Optional array of Dates. Days the student
+ *                             can't study; no blocks are placed on them.
  *
  * Output contract
  *   Promise<{ blocks: Array<{ date, task, subject, allocatedHours }> }>

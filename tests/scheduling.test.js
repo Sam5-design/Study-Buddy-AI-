@@ -190,3 +190,95 @@ describe('Sprint 2: invalid task data is rejected', () => {
     }
   });
 });
+// ------------------------------------------------------------------
+// 4. Unavailable days (Sprint 2 feature). The student can block off days
+//    (work shifts, holidays, appointments). No study block may land on a
+//    blocked day, and the work is fitted into the other days instead.
+//    Dates here are built in local time, the same way the app saves them.
+// ------------------------------------------------------------------
+describe('Sprint 2: unavailable days', () => {
+  const day = (d) => new Date(2026, 9, d); // 9 = October (months start at 0)
+  const MON = day(5);
+  const localDay = (date) => {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  };
+  const task = (id, deadline, hours) => ({ _id: id, subject: 's', deadline, estimatedEffortHours: hours, priority: 'medium' });
+
+  test('no study block lands on a blocked day (simple mode)', async () => {
+    const { blocks } = await generatePlan({
+      tasks: [task('t', day(20), 6)], availableStudyTimeHours: 2, startDate: MON,
+      unavailableDates: [day(6), day(7)],
+    });
+    assert.deepEqual(blocks.map((b) => localDay(b.date)), ['2026-10-5', '2026-10-8', '2026-10-9']);
+  });
+
+  test('no study block lands on a blocked day (session mode)', async () => {
+    const { blocks } = await generatePlan({
+      tasks: [task('a', day(20), 4), task('b', day(22), 4)], availableStudyTimeHours: 2, startDate: MON,
+      maxSessionHours: 1, unavailableDates: [day(6), day(8)],
+    });
+    const used = new Set(blocks.map((b) => localDay(b.date)));
+    assert.ok(!used.has('2026-10-6') && !used.has('2026-10-8'));
+  });
+
+  test('all hours are still scheduled when days are blocked', async () => {
+    const { blocks } = await generatePlan({
+      tasks: [task('a', day(20), 5), task('b', day(22), 3)], availableStudyTimeHours: 2, startDate: MON,
+      maxSessionHours: 1, unavailableDates: [day(5), day(6), day(9)],
+    });
+    assert.ok(Math.abs(totalHours(blocks) - 8) < 1e-9);
+  });
+
+  test('if the first day is blocked, the plan starts on the next free day', async () => {
+    const { blocks } = await generatePlan({
+      tasks: [task('t', day(20), 2)], availableStudyTimeHours: 2, startDate: MON,
+      unavailableDates: [day(5), day(6)],
+    });
+    assert.equal(localDay(blocks[0].date), '2026-10-7');
+  });
+
+  test('blocked days before a deadline make that task more urgent', async () => {
+    // A: due 12 Oct, 4h. B: due 8 Oct, 2h. Normally B has less slack and goes first.
+    // Blocking 8-11 Oct takes 4 of A's days away (but none of B's), so A must go first.
+    const tasks = [task('A', day(12), 4), task('B', day(8), 2)];
+    const normal = await generatePlan({ tasks, availableStudyTimeHours: 2, startDate: MON });
+    assert.equal(normal.blocks[0].task, 'B');
+    const withBlocked = await generatePlan({
+      tasks, availableStudyTimeHours: 2, startDate: MON,
+      unavailableDates: [day(8), day(9), day(10), day(11)],
+    });
+    assert.equal(withBlocked.blocks[0].task, 'A');
+  });
+
+  test('empty or invalid blocked dates are ignored', async () => {
+    const tasks = [task('t', day(20), 4)];
+    const normal = await generatePlan({ tasks, availableStudyTimeHours: 2, startDate: MON });
+    const withJunk = await generatePlan({ tasks, availableStudyTimeHours: 2, startDate: MON, unavailableDates: ['not a date', null] });
+    assert.deepEqual(withJunk.blocks.map((b) => localDay(b.date)), normal.blocks.map((b) => localDay(b.date)));
+  });
+});
+
+// Saving blocked days from the availability form (controller helper).
+describe('Sprint 2: reading unavailable days from the form', () => {
+  const { parseUnavailableDates } = require('../controllers/studyPlanController');
+  const inDays = (n) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + n);
+    const pad = (x) => String(x).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
+  test('accepts one date or a list, sorted, without duplicates', () => {
+    assert.equal(parseUnavailableDates(inDays(3)).length, 1);
+    const dates = parseUnavailableDates([inDays(5), inDays(2), inDays(5)]);
+    assert.equal(dates.length, 2);
+    assert.ok(dates[0] < dates[1]);
+  });
+
+  test('drops past dates and anything that is not a date', () => {
+    assert.deepEqual(parseUnavailableDates([inDays(-2), 'hello', '', undefined]), []);
+    assert.deepEqual(parseUnavailableDates(undefined), []);
+  });
+});

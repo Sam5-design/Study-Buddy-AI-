@@ -14,3 +14,4 @@ No database or extra packages are needed. It covers:
 - edge cases (empty lists, fractional hours, multi-day splitting)
 - regression checks for session-based scheduling
 - rejection of invalid task data (missing deadline or effort hours)
+- unavailable days (no study is scheduled on days the student blocks off)
