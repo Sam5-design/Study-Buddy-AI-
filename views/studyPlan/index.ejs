@@ -146,7 +146,7 @@
 
         <nav class="sb-nav">
           <a href="/study-plan" class="active">▦ Plan</a>
-          <a href="/subjects/new">◈ Add subject</a>
+          <a href="/subjects">◈ Subjects</a>
           <a href="/study-plan/availability">◷ Study time</a>
           <a href="/profile">👤 Profile</a>
         </nav>
@@ -195,9 +195,9 @@
         <div class="sb-subjects">
           <span class="sb-side-label" style="margin:0">YOUR SUBJECTS</span>
           <% subjects.forEach(function (subject) { %>
-            <span class="sb-chip" style="background: <%= tint(subject.colour, '33') %>;">
+            <a class="sb-chip" href="/subjects" title="<%= subject.name %>: edit or delete" style="background: <%= tint(subject.colour, '33') %>;">
               <i style="background: <%= subject.colour %>;"></i><%= subject.code || subject.name %>
-            </span>
+            </a>
           <% }); %>
           <a href="/subjects/new" class="sb-chip sb-chip-add">+ Add</a>
         </div>

@@ -1,0 +1,102 @@
+<%#
+  US3: list of the student's subjects with their tasks, and buttons to
+  edit or delete each one.
+%>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your subjects — Study Buddy</title>
+    <%- include('_style') %>
+    <style>
+      .subject-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+      .subject-title { display: flex; align-items: center; gap: 10px; }
+      .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+      .subject-title h2 { margin: 0; font-size: 1.15rem; }
+      .task { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-top: 8px; border-radius: 12px; background: var(--cream); border-left: 5px solid; flex-wrap: wrap; }
+      .task-main { flex: 1 1 220px; min-width: 0; }
+      .task-name { font-weight: 600; }
+      .task.complete .task-name { text-decoration: line-through; opacity: 0.6; }
+      .tag { font-size: 0.7rem; padding: 2px 9px; border-radius: 999px; font-weight: 700; text-transform: capitalize; background: #e3ecf7; color: #2c5d99; }
+      .tag.complete { background: #dff1ec; color: #1f7a6d; }
+      .tag.high { background: #fbe3e1; color: #b3423a; }
+      .tag.low { background: #eef0f3; color: #5d6675; }
+      .empty { text-align: center; padding: 32px 16px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="/study-plan">← Back to dashboard</a>
+      <h1>Your subjects</h1>
+      <p class="muted">Edit or delete your subjects and tasks. Your study plan updates automatically.</p>
+
+      <% if (message) { %>
+        <div class="msg">
+          ✓ <%= message %>
+          <% if (recalculated) { %> Your study plan was updated. <a href="/study-plan?regenerated=1">See what changed →</a><% } %>
+        </div>
+      <% } %>
+
+      <div class="actions" style="margin-top:16px;">
+        <a class="btn" href="/subjects/new">+ Add a subject</a>
+      </div>
+
+      <% if (!subjects.length) { %>
+        <section class="card empty">
+          <p class="muted">You haven't added any subjects yet.</p>
+          <a class="btn" href="/subjects/new">Add your first subject</a>
+        </section>
+      <% } %>
+
+      <% subjects.forEach(function (subject) {
+           var tasks = tasksBySubject[String(subject._id)] || [];
+      %>
+        <section class="card">
+          <div class="subject-head">
+            <div class="subject-title">
+              <span class="dot" style="background: <%= subject.colour %>;"></span>
+              <div>
+                <h2><%= subject.code %> · <%= subject.name %></h2>
+                <div class="muted"><%= subject.trimester %> · <%= tasks.length %> <%= tasks.length === 1 ? 'task' : 'tasks' %></div>
+              </div>
+            </div>
+            <div class="actions">
+              <a class="btn light small" href="/subjects/<%= subject._id %>/tasks/new">+ Task</a>
+              <a class="btn light small" href="/subjects/<%= subject._id %>/edit">Edit</a>
+              <form action="/subjects/<%= subject._id %>/delete" method="POST"
+                    onsubmit="return confirm('Delete <%= subject.code %> and all <%= tasks.length %> of its tasks? This cannot be undone.');">
+                <button class="btn danger small" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+
+          <% if (!tasks.length) { %>
+            <p class="muted" style="margin:12px 0 0;">No tasks yet.</p>
+          <% } %>
+
+          <% tasks.forEach(function (task) { %>
+            <div class="task <%= task.status %>" style="border-left-color: <%= subject.colour %>;">
+              <div class="task-main">
+                <div class="task-name"><%= task.description %></div>
+                <div class="muted" style="font-size:0.8rem;">
+                  Due <%= new Date(task.deadline).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) %>
+                  · <%= task.estimatedEffortHours %>h
+                </div>
+              </div>
+              <span class="tag <%= task.priority %>"><%= task.priority %></span>
+              <span class="tag <%= task.status %>"><%= task.status %></span>
+              <div class="actions">
+                <a class="btn light small" href="/subjects/<%= subject._id %>/tasks/<%= task._id %>/edit">Edit</a>
+                <form action="/subjects/<%= subject._id %>/tasks/<%= task._id %>/delete" method="POST"
+                      onsubmit="return confirm('Delete this task? This cannot be undone.');">
+                  <button class="btn danger small" type="submit">Delete</button>
+                </form>
+              </div>
+            </div>
+          <% }); %>
+        </section>
+      <% }); %>
+    </main>
+  </body>
+</html>

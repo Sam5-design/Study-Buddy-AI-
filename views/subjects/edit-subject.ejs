@@ -1,0 +1,59 @@
+<%# US3: edit a subject's name, code, trimester and colour. %>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit subject — Study Buddy</title>
+    <%- include('_style') %>
+  </head>
+  <body>
+    <main class="wrap" style="max-width:640px;">
+      <a class="back" href="/subjects">← Back to subjects</a>
+      <h1>Edit subject</h1>
+      <p class="muted">Change the details of <%= subject.code %>.</p>
+
+      <% if (errors.length) { %>
+        <div class="msg err"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }); %></ul></div>
+      <% } %>
+
+      <form class="card" action="/subjects/<%= subject._id %>/edit" method="POST">
+        <label class="f" for="name">Subject name</label>
+        <input type="text" id="name" name="name" value="<%= formData.name %>" maxlength="100" required />
+
+        <div class="row2">
+          <div>
+            <label class="f" for="code">Subject code</label>
+            <input type="text" id="code" name="code" value="<%= formData.code %>" maxlength="20" required />
+          </div>
+          <div>
+            <label class="f" for="trimester">Trimester</label>
+            <select id="trimester" name="trimester" required>
+              <% ['Trimester 1', 'Trimester 2', 'Trimester 3'].forEach(function (t) { %>
+                <option value="<%= t %>" <%= formData.trimester === t ? 'selected' : '' %>><%= t %></option>
+              <% }); %>
+              <% if (formData.trimester && ['Trimester 1', 'Trimester 2', 'Trimester 3'].indexOf(formData.trimester) === -1) { %>
+                <option value="<%= formData.trimester %>" selected><%= formData.trimester %></option>
+              <% } %>
+            </select>
+          </div>
+        </div>
+
+        <label class="f">Colour</label>
+        <div class="swatches">
+          <% colours.forEach(function (c) { %>
+            <label title="<%= c %>">
+              <input type="radio" name="colour" value="<%= c %>" <%= String(formData.colour).toUpperCase() === c.toUpperCase() ? 'checked' : '' %> />
+              <span style="background: <%= c %>;"></span>
+            </label>
+          <% }); %>
+        </div>
+
+        <div class="actions" style="margin-top:20px;">
+          <button class="btn" type="submit">Save changes</button>
+          <a class="btn light" href="/subjects">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

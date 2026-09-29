@@ -1,0 +1,57 @@
+<%# US3: edit a task's description, deadline, effort, priority and status. %>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit task — Study Buddy</title>
+    <%- include('_style') %>
+  </head>
+  <body>
+    <main class="wrap" style="max-width:640px;">
+      <a class="back" href="/subjects">← Back to subjects</a>
+      <h1>Edit task</h1>
+      <p class="muted"><%= subject.code %> · <%= subject.name %></p>
+
+      <% if (errors.length) { %>
+        <div class="msg err"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }); %></ul></div>
+      <% } %>
+
+      <form class="card" action="/subjects/<%= subject._id %>/tasks/<%= task._id %>/edit" method="POST">
+        <label class="f" for="description">Task name</label>
+        <input type="text" id="description" name="description" value="<%= formData.description %>" maxlength="300" required />
+
+        <div class="row2">
+          <div>
+            <label class="f" for="deadline">Deadline</label>
+            <input type="datetime-local" id="deadline" name="deadline" value="<%= formData.deadline %>" required />
+          </div>
+          <div>
+            <label class="f" for="estimatedEffortHours">Estimated effort (hours)</label>
+            <input type="number" id="estimatedEffortHours" name="estimatedEffortHours" value="<%= formData.estimatedEffortHours %>" min="0.25" max="200" step="0.25" required />
+          </div>
+        </div>
+
+        <label class="f">Priority</label>
+        <div class="pills">
+          <% ['low', 'medium', 'high'].forEach(function (p) { %>
+            <label><input type="radio" name="priority" value="<%= p %>" <%= formData.priority === p ? 'checked' : '' %> /><%= p.charAt(0).toUpperCase() + p.slice(1) %></label>
+          <% }); %>
+        </div>
+
+        <label class="f">Status</label>
+        <div class="pills">
+          <label><input type="radio" name="status" value="pending" <%= formData.status !== 'complete' ? 'checked' : '' %> />Still to do</label>
+          <label><input type="radio" name="status" value="complete" <%= formData.status === 'complete' ? 'checked' : '' %> />Finished</label>
+        </div>
+
+        <p class="muted" style="font-size:0.8rem; margin-top:14px;">Saving will update your study plan automatically.</p>
+
+        <div class="actions" style="margin-top:8px;">
+          <button class="btn" type="submit">Save changes</button>
+          <a class="btn light" href="/subjects">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

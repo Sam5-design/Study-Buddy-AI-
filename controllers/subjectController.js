@@ -1,5 +1,6 @@
 const Subject = require('../models/Subject');
 const Task = require('../models/Task');
+const { recalculateIfPlanExists } = require('../services/studyPlanService');
 
 
 // ======================================================
@@ -579,6 +580,13 @@ async function createTask(req, res, next) {
     if (isWebRequest(req)) {
 
       // Task successfully created.
+      // US6: if the student already has a plan, add the new task to it
+      // automatically.
+      await recalculateIfPlanExists(
+        req.user,
+        `New task "${task.description}" was added.`
+      );
+
       // Next step in the Figma flow:
       // Available Study Time.
 
