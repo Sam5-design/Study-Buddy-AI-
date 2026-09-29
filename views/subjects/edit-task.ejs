@@ -39,6 +39,11 @@
           <% }); %>
         </div>
 
+        <label style="display:block; margin: 0.5rem 0 1rem;">
+          <input type="checkbox" name="isExam" <%= formData.isExam ? 'checked' : '' %> />
+          This is an exam (more revision time in the last 3 days before it)
+        </label>
+
         <label class="f">Status</label>
         <div class="pills">
           <label><input type="radio" name="status" value="pending" <%= formData.status !== 'complete' ? 'checked' : '' %> />Still to do</label>

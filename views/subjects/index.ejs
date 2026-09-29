@@ -88,7 +88,7 @@
                   · <%= task.estimatedEffortHours %>h
                 </div>
               </div>
-              <span class="tag <%= task.priority %>"><%= task.priority %></span>
+              <span class="tag <%= task.priority %>"><%= task.priority %></span><% if (task.isExam) { %> <span class="tag">exam</span><% } %>
               <span class="tag <%= task.status %>"><%= task.status %></span>
               <div class="actions">
                 <a class="btn light small" href="/subjects/<%= subject._id %>/tasks/<%= task._id %>/edit">Edit</a>

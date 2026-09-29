@@ -11,6 +11,8 @@
  *                             objects with the same shape). Each needs
  *                             at least: _id, subject, deadline,
  *                             estimatedEffortHours, priority.
+ *                             Optional isExam: true sets aside growing
+ *                             revision time in the 3 days before it.
  *   availableStudyTimeHours  Number > 0. Hours per day the student has
  *                             free to study.
  *   startDate                Date. The first day the plan should cover.

@@ -282,3 +282,84 @@ describe('Sprint 2: reading unavailable days from the form', () => {
     assert.deepEqual(parseUnavailableDates(undefined), []);
   });
 });
+
+// ------------------------------------------------------------------
+// 5. Exam boost (Sprint 2 feature). For a task marked as an exam, revision
+//    time is set aside in the 3 days before the exam and grows as the exam
+//    gets closer: 0.5h, then 1h, then 1.5h the day before. The task's total
+//    hours stay the same; more of them just land in the final days.
+// ------------------------------------------------------------------
+describe('Sprint 2: exam boost', () => {
+  const day = (d, hour = 0) => new Date(2026, 9, d, hour); // October 2026, local time
+  const localDay = (date) => {
+    const d = new Date(date);
+    return `${d.getMonth() + 1}-${d.getDate()}`;
+  };
+  // Hours a task gets on each day, e.g. { '10-14': 1.5 }
+  const hoursByDay = (blocks, taskId) => blocks
+    .filter((b) => b.task === taskId)
+    .reduce((acc, b) => ({ ...acc, [localDay(b.date)]: (acc[localDay(b.date)] || 0) + b.allocatedHours }), {});
+  const makeTasks = (isExam, examHours = 6) => [
+    { _id: 'exam', subject: 's', deadline: day(15, 9), estimatedEffortHours: examHours, priority: 'medium', isExam },
+    { _id: 'essay', subject: 's', deadline: day(20), estimatedEffortHours: 8, priority: 'medium' },
+  ];
+  const plan = (tasks, extra = {}) => generatePlan({
+    tasks, availableStudyTimeHours: 2, startDate: day(5), maxSessionHours: 1, ...extra,
+  });
+
+  test('without the boost, the exam gets no study in its final 3 days', async () => {
+    const { blocks } = await plan(makeTasks(false));
+    const exam = hoursByDay(blocks, 'exam');
+    assert.equal((exam['10-12'] || 0) + (exam['10-13'] || 0) + (exam['10-14'] || 0), 0);
+  });
+
+  test('with the boost, revision grows as the exam gets closer (0.5h, 1h, 1.5h)', async () => {
+    const { blocks } = await plan(makeTasks(true));
+    const exam = hoursByDay(blocks, 'exam');
+    assert.equal(exam['10-12'], 0.5);
+    assert.equal(exam['10-13'], 1);
+    assert.equal(exam['10-14'], 1.5);
+  });
+
+  test('the boost does not change the total hours of any task', async () => {
+    const without = await plan(makeTasks(false));
+    const withBoost = await plan(makeTasks(true));
+    for (const id of ['exam', 'essay']) {
+      const total = (blocks) => blocks.filter((b) => b.task === id).reduce((s, b) => s + b.allocatedHours, 0);
+      assert.ok(Math.abs(total(without.blocks) - total(withBoost.blocks)) < 1e-9);
+    }
+  });
+
+  test('also works in simple (one task after another) mode', async () => {
+    const { blocks } = await generatePlan({ tasks: makeTasks(true), availableStudyTimeHours: 2, startDate: day(5) });
+    assert.equal(hoursByDay(blocks, 'exam')['10-14'], 1.5);
+  });
+
+  test('revision never uses more hours than the exam task has', async () => {
+    const { blocks } = await plan(makeTasks(true, 1));
+    const exam = hoursByDay(blocks, 'exam');
+    assert.deepEqual(exam, { '10-14': 1 }); // all of the 1 hour goes to the day before
+  });
+
+  test('revision skips blocked days and never goes over the daily limit', async () => {
+    const { blocks } = await generatePlan({
+      tasks: makeTasks(true), availableStudyTimeHours: 1, startDate: day(5), maxSessionHours: 1,
+      unavailableDates: [day(13)],
+    });
+    const exam = hoursByDay(blocks, 'exam');
+    assert.equal(exam['10-13'], undefined);   // blocked
+    assert.equal(exam['10-14'], 1);            // 1.5h wanted, only 1h free that day
+    const perDay = {};
+    blocks.forEach((b) => { perDay[localDay(b.date)] = (perDay[localDay(b.date)] || 0) + b.allocatedHours; });
+    assert.ok(Object.values(perDay).every((h) => h <= 1 + 1e-9));
+  });
+
+  test('if the plan starts inside the final 3 days, only the days left are used', async () => {
+    const { blocks } = await generatePlan({
+      tasks: makeTasks(true), availableStudyTimeHours: 2, startDate: day(13), maxSessionHours: 1,
+    });
+    const exam = hoursByDay(blocks, 'exam');
+    assert.equal(exam['10-12'], undefined);
+    assert.ok(exam['10-14'] >= 1.5);
+  });
+});

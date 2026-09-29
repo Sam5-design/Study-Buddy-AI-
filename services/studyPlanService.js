@@ -91,6 +91,7 @@ async function regeneratePlan(user, { reason = null } = {}) {
           subject: task.subject,
           deadline: task.deadline,
           priority: task.priority,
+          isExam: Boolean(task.isExam),
           estimatedEffortHours: Math.round(remaining * 100) / 100,
         });
       }
