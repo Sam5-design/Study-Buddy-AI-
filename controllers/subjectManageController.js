@@ -162,6 +162,7 @@ async function showEditTask(req, res, next) {
         deadline: toDateTimeInput(task.deadline),
         estimatedEffortHours: task.estimatedEffortHours,
         priority: task.priority,
+        isExam: Boolean(task.isExam),
         status: task.status,
         notes: task.notes || '',
         links: (task.links || []).join('\n'),
@@ -182,6 +183,7 @@ async function updateTask(req, res, next) {
     const effort = Number(req.body.estimatedEffortHours);
     const priority = String(req.body.priority || 'medium').toLowerCase();
     const status = req.body.status === 'complete' ? 'complete' : 'pending';
+    const isExam = Boolean(req.body.isExam); // exam boost (Sprint 2)
     const deadline = new Date(req.body.deadline);
 
     // Notes and links (Sprint 2). Links come from a textarea, one per line.
@@ -224,6 +226,7 @@ async function updateTask(req, res, next) {
       deadline: task.deadline.getTime(),
       effort: task.estimatedEffortHours,
       priority: task.priority,
+      isExam: Boolean(task.isExam),
       status: task.status,
     };
 
@@ -231,6 +234,7 @@ async function updateTask(req, res, next) {
     task.deadline = deadline;
     task.estimatedEffortHours = effort;
     task.priority = priority;
+    task.isExam = isExam;
     task.status = status;
     task.notes = notes;
     task.links = links;
@@ -242,13 +246,14 @@ async function updateTask(req, res, next) {
     if (editAll) {
       await Task.updateMany(
         { recurrenceGroupId: task.recurrenceGroupId, user: req.user.id, _id: { $ne: task._id } },
-        { $set: { description, estimatedEffortHours: effort, priority } }
+        { $set: { description, estimatedEffortHours: effort, priority, isExam } }
       );
     }
 
     // Only reschedule if something that affects the plan changed.
     const affectsPlan = before.deadline !== deadline.getTime() || before.effort !== effort
-      || before.priority !== priority || before.status !== status;
+      || before.priority !== priority || before.status !== status
+      || before.isExam !== isExam;
 
     let recalculated = false;
     if (affectsPlan) {

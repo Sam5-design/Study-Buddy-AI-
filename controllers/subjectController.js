@@ -615,7 +615,11 @@ async function createTask(req, res, next) {
         effort,
 
       priority:
-        taskPriority
+        taskPriority,
+
+      // Sprint 2 (Komal): exam boost
+      isExam:
+        Boolean(req.body.isExam)
 
     };
 

@@ -72,6 +72,12 @@ const taskSchema = new mongoose.Schema({
       message: 'Links must start with http:// or https://',
     },
   },
+  // Sprint 2 (Komal): an exam gets more study time as its date gets closer
+  // (see the exam boost in services/aiSchedulingEngine/generatePlan.js).
+  isExam: {
+    type: Boolean,
+    default: false,
+  },
   // Sprint 2: weekly repeating tasks. Every task in one series shares the
   // same recurrenceGroupId, which is how "edit all" and "delete all" find them.
   recurrenceGroupId: {

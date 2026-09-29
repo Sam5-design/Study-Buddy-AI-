@@ -18,6 +18,13 @@
 
 const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
 
+// Exam boost (Sprint 2, Komal): for a task marked as an exam, part of its
+// hours are set aside for revision in the last 3 days before the exam, and
+// the amount grows as the exam gets closer (key = days before the exam).
+// The rest of the task is scheduled as normal. The task's total hours do not
+// change: the boost only moves more of them into the final days.
+const EXAM_REVISION_HOURS = { 3: 0.5, 2: 1, 1: 1.5 };
+
 function daysBetween(from, to) {
   const MS_PER_DAY = 1000 * 60 * 60 * 24;
   return (to.getTime() - from.getTime()) / MS_PER_DAY;
@@ -116,21 +123,93 @@ async function generatePlan({
     return next;
   };
 
+  // Hours each day still has free, after exam revision is set aside.
+  const reserved = {};
+  const freeHoursOn = (date) => {
+    const base = dayId(date) === dayId(start) ? firstDay : availableStudyTimeHours;
+    return Math.max(0, base - (reserved[dayId(date)] || 0));
+  };
+
+  for (const item of scored) item.remaining = item.task.estimatedEffortHours;
+  const revisionBlocks = planExamRevision(scored, { start, blocked, freeHoursOn, reserved });
+
+  let blocks;
   if (typeof maxSessionHours === 'number' && maxSessionHours > 0) {
-    return { blocks: scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, firstDay, nextFreeDay, blocked }) };
+    blocks = scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, nextFreeDay, blocked, freeHoursOn });
+  } else {
+    blocks = scheduleOneByOne(scored, { start, nextFreeDay, freeHoursOn });
   }
 
+  return { blocks: mergeRevision(blocks, revisionBlocks) };
+}
+
+/**
+ * Exam boost: set aside revision time for each exam in the 3 days before it
+ * (0.5h, then 1h, then 1.5h the day before). Never more than the task has
+ * left, never on a blocked day or before the plan starts, and never more than
+ * the day has free. The hours are taken off the task's remaining work.
+ */
+function planExamRevision(scored, { start, blocked, freeHoursOn, reserved }) {
+  const EPSILON = 1e-9;
+  const startDay = new Date(start);
+  startDay.setHours(0, 0, 0, 0);
+  const revision = [];
+
+  const exams = scored.filter((item) => item.task.isExam).sort((a, b) => a.deadline - b.deadline);
+  for (const item of exams) {
+    const examDay = new Date(item.deadline);
+    examDay.setHours(0, 0, 0, 0);
+
+    // Closest day first, so the day before the exam is filled first.
+    for (const daysBefore of [1, 2, 3]) {
+      const day = new Date(examDay);
+      day.setDate(day.getDate() - daysBefore);
+      if (day < startDay || blocked.has(dayId(day))) continue;
+
+      const hours = Math.min(EXAM_REVISION_HOURS[daysBefore], item.remaining, freeHoursOn(day));
+      if (hours <= EPSILON) continue;
+
+      revision.push({ date: day.getTime() === startDay.getTime() ? new Date(start) : day, task: item.task._id, subject: item.task.subject, allocatedHours: hours });
+      reserved[dayId(day)] = (reserved[dayId(day)] || 0) + hours;
+      item.remaining -= hours;
+    }
+  }
+  return revision;
+}
+
+// Put the revision sessions into the plan in date order. A revision session
+// straight after the same task on the same day becomes one longer session.
+function mergeRevision(blocks, revisionBlocks) {
+  if (revisionBlocks.length === 0) return blocks;
+  const all = [...blocks, ...revisionBlocks].sort((a, b) => dayId(a.date).localeCompare(dayId(b.date)));
+  const merged = [];
+  for (const block of all) {
+    const previous = merged[merged.length - 1];
+    if (previous && previous.task === block.task && dayId(previous.date) === dayId(block.date)) {
+      previous.allocatedHours += block.allocatedHours;
+    } else {
+      merged.push(block);
+    }
+  }
+  return merged;
+}
+
+// Original scheduling: finish the most urgent task, then the next one.
+function scheduleOneByOne(scored, { start, nextFreeDay, freeHoursOn }) {
+  const EPSILON = 1e-9;
   const blocks = [];
   let currentDate = new Date(start);
-  let hoursLeftToday = firstDay;
+  let hoursLeftToday = freeHoursOn(currentDate);
 
-  for (const { task } of scored) {
-    let hoursRemaining = task.estimatedEffortHours;
+  for (const item of scored) {
+    const { task } = item;
+    let hoursRemaining = item.remaining;
 
-    while (hoursRemaining > 0) {
-      if (hoursLeftToday <= 0) {
+    while (hoursRemaining > EPSILON) {
+      if (hoursLeftToday <= EPSILON) {
         currentDate = nextFreeDay(currentDate);
-        hoursLeftToday = availableStudyTimeHours;
+        hoursLeftToday = freeHoursOn(currentDate);
+        continue;
       }
 
       const allocatedHours = Math.min(hoursRemaining, hoursLeftToday);
@@ -147,7 +226,7 @@ async function generatePlan({
     }
   }
 
-  return { blocks };
+  return blocks;
 }
 
 /**
@@ -161,13 +240,13 @@ async function generatePlan({
  * other task goes next, so subjects are mixed across the day instead of
  * back to back.
  */
-function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, firstDay, nextFreeDay, blocked }) {
+function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, nextFreeDay, blocked, freeHoursOn }) {
   const EPSILON = 1e-9;
-  const pending = scored.map((item) => ({ ...item, remaining: item.task.estimatedEffortHours }));
+  const pending = scored.map((item) => ({ ...item }));
 
   const blocks = [];
   let currentDate = new Date(start);
-  let hoursLeftToday = firstDay;
+  let hoursLeftToday = freeHoursOn(currentDate);
   let lastTaskToday = null;
 
   const slackOn = (item, date) =>
@@ -183,8 +262,9 @@ function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSession
   while (pending.some((item) => item.remaining > EPSILON)) {
     if (hoursLeftToday <= EPSILON) {
       currentDate = nextFreeDay(currentDate);
-      hoursLeftToday = availableStudyTimeHours;
+      hoursLeftToday = freeHoursOn(currentDate);
       lastTaskToday = null;
+      continue;
     }
 
     const ranked = pending
