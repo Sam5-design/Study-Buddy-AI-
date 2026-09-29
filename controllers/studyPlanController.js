@@ -7,6 +7,7 @@ const StudyPlan = require('../models/StudyPlan');
 const { regeneratePlan, recalculateIfPlanExists } = require('../services/studyPlanService');
 const { buildPlanViewModel } = require('../utils/planViewModel');
 const { buildICS } = require('../utils/icsExport');
+const { buildAttention } = require('../utils/attentionViewModel');
 
 /**
  * GET /study-plan
@@ -37,10 +38,14 @@ async function showStudyPlan(req, res, next) {
     const startToday = new Date(today);
     startToday.setHours(0, 0, 0, 0);
 
-    const [subjects, upcomingTasks] = await Promise.all([
+    const [subjects, upcomingTasks, overdueTasks] = await Promise.all([
       Subject.find({ user: userId }).sort({ createdAt: 1 }),
       // Every unfinished task that isn't overdue, soonest first.
       Task.find({ user: userId, status: 'pending', deadline: { $gte: startToday } })
+        .sort({ deadline: 1 })
+        .populate('subject', 'name code colour'),
+      // Every unfinished task whose deadline has already passed (for the "Needs attention" card).
+      Task.find({ user: userId, status: 'pending', deadline: { $lt: startToday } })
         .sort({ deadline: 1 })
         .populate('subject', 'name code colour'),
     ]);
@@ -54,6 +59,9 @@ async function showStudyPlan(req, res, next) {
 
     const streaks = buildStreakViewModel({ plan, today });
 
+    // The "Needs attention" card: overdue tasks, tasks due soon and missed sessions.
+    const attention = buildAttention({ upcomingTasks, overdueTasks, planView, today });
+
     // "What changed" notes from the latest regeneration (FR-15).
     const changes = plan && req.query.regenerated
       ? plan.adjustments.map((a) => a.note).filter(Boolean)
@@ -61,6 +69,7 @@ async function showStudyPlan(req, res, next) {
 
     return res.render('studyPlan/index', {
       streaks,
+      attention,
       planView,
       changes,
       dashboard,
