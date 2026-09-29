@@ -2,6 +2,7 @@ const StudyPlan = require('../models/StudyPlan');
 const Subject = require('../models/Subject');
 const Task = require('../models/Task');
 const { buildProgressViewModel } = require('../utils/progressViewModel');
+const { buildStreakViewModel } = require('../utils/streakViewModel');
 
 async function showProgress(req, res, next) {
   try {
@@ -21,7 +22,10 @@ async function showProgress(req, res, next) {
       today: new Date(),
     });
 
+    const streaks = buildStreakViewModel({ plan, today: new Date() });
+
     return res.render('progress', {
+      streaks,
       user: req.user,
       stats,
     });

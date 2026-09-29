@@ -156,6 +156,57 @@
           </article>
         </section>
 
+        <section class="streak-badges-section" aria-labelledby="streaks-heading">
+          <div class="section-heading streak-section-heading">
+            <div>
+              <p class="overline">Small wins, added up</p>
+              <h2 id="streaks-heading">Study streaks &amp; badges</h2>
+            </div>
+          </div>
+
+          <div class="streak-badges-grid">
+            <article class="streak-card">
+              <div class="summary-card-top">
+                <span class="summary-label">Current streak</span>
+                <span class="streak-icon" aria-hidden="true">🔥</span>
+              </div>
+
+              <% if (streaks.currentStreak > 0) { %>
+                <strong class="streak-value">🔥 <%= streaks.currentStreak %> day<%= streaks.currentStreak === 1 ? '' : 's' %> streak</strong>
+                <p>You studied on <%= streaks.currentStreak %> day<%= streaks.currentStreak === 1 ? '' : 's' %> in a row.</p>
+                <div class="streak-card-footer"><span>Keep it going</span><span aria-hidden="true">→</span></div>
+              <% } else { %>
+                <strong class="streak-value">Start your streak</strong>
+                <p>Complete a study block to begin building a daily study streak.</p>
+                <div class="streak-card-footer"><span>Your next session counts</span><span aria-hidden="true">→</span></div>
+              <% } %>
+            </article>
+
+            <article class="panel badges-panel" aria-labelledby="badges-heading">
+              <div class="badges-heading">
+                <div>
+                  <h3 id="badges-heading">Badges</h3>
+                  <p>Earned as you build your rhythm.</p>
+                </div>
+                <span class="badge-count"><%= streaks.earnedCount %> of <%= streaks.badges.length %> earned</span>
+              </div>
+
+              <div class="badge-grid">
+                <% streaks.badges.forEach(function (badge) { %>
+                  <div class="badge-card <%= badge.earned ? 'earned' : 'locked' %>">
+                    <span class="badge-mark" aria-hidden="true"><%= badge.symbol %></span>
+                    <div class="badge-copy">
+                      <strong><%= badge.name %></strong>
+                      <span><%= badge.description %></span>
+                    </div>
+                    <span class="badge-status <%= badge.earned ? '' : 'locked-status' %>"><%= badge.earned ? 'Earned' : 'Locked' %></span>
+                  </div>
+                <% }); %>
+              </div>
+            </article>
+          </div>
+        </section>
+
         <section class="subject-breakdown" aria-labelledby="breakdown-heading">
           <div class="section-heading">
             <div><p class="overline">This week by subject</p><h2 id="breakdown-heading">Subject breakdown</h2></div>

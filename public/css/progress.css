@@ -96,3 +96,46 @@ h1 { margin: 0; font-size: clamp(42px, 4vw, 58px); line-height: .98; }.header-su
   .sidebar-logout { margin-top: 18px; }
 }
 .donut { position: relative; }
+
+/* ---------- Study streaks & badges ---------- */
+.streak-badges-section { max-width: 1230px; margin: 42px auto 0; }
+.streak-section-heading { margin-bottom: 17px; }
+.streak-badges-grid { display: grid; grid-template-columns: minmax(240px, .78fr) minmax(0, 1.55fr); gap: 18px; align-items: stretch; }
+.streak-card { min-height: 205px; padding: 22px; border: 1px solid var(--line); border-radius: 19px; background: #fffaf2; }
+.streak-icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 9px; background: var(--soft-coral); font-size: 16px; }
+.streak-value { display: block; margin-top: 29px; font-family: var(--display); font-size: 27px; line-height: 1.08; letter-spacing: -.05em; }
+.streak-card p { margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+.streak-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 27px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 600; }
+.streak-card-footer span:last-child { color: var(--coral); font-size: 15px; }
+.badges-panel { min-height: 205px; }
+.badges-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.badges-heading h3 { margin: 0; font-family: var(--display); font-size: 24px; line-height: 1; letter-spacing: -.06em; }
+.badges-heading p { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+.badge-count { padding: 7px 10px; border: 1px solid var(--line); border-radius: 50px; color: var(--muted); font-size: 9px; font-weight: 700; white-space: nowrap; }
+.badge-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+.badge-card { display: flex; min-width: 0; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 13px; background: #fffaf2; }
+.badge-card.locked { background: #f6f2eb; opacity: .68; }
+.badge-mark { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--soft-coral); color: var(--coral); font-family: var(--display); font-size: 14px; font-weight: 700; }
+.badge-card.locked .badge-mark { background: #ebe5dc; color: #a7adb5; }
+.badge-copy { min-width: 0; flex: 1; }
+.badge-copy strong, .badge-copy span { display: block; }
+.badge-copy strong { overflow: hidden; color: var(--navy); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.badge-copy span { margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.25; }
+.badge-status { padding: 4px 6px; border-radius: 50px; background: var(--soft-green); color: var(--green); font-size: 8px; font-weight: 700; white-space: nowrap; }
+.locked-status { background: #ebe5dc; color: #9da4ad; }
+
+@media (max-width: 1000px) {
+  .streak-badges-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .streak-badges-section { margin-top: 30px; }
+  .streak-badges-grid { gap: 13px; }
+  .streak-card { min-height: 190px; padding: 20px 17px; }
+  .badges-panel { padding: 20px 17px; }
+  .badges-heading { gap: 10px; }
+  .badge-count { padding: 6px 8px; font-size: 8px; }
+  .badge-grid { grid-template-columns: 1fr; }
+  .badge-copy span { font-size: 9px; }
+}
+
