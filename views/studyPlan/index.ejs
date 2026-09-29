@@ -122,6 +122,18 @@
       .sb-empty h3 { font-family: 'Fraunces', serif; font-size: 1.5rem; margin: 0 0 8px; }
       .sb-empty p { color: var(--muted); margin: 0 0 20px; }
 
+      /* ---------- Needs attention card ---------- */
+      .sb-attention { background: #fdf0ee; border: 1px solid #f0c9c4; border-radius: 18px; padding: 16px 20px; margin-bottom: 16px; }
+      .sb-attention-title { margin: 0 0 8px; font-size: 0.72rem; letter-spacing: 0.12em; font-weight: 700; color: var(--coral); }
+      .sb-attention-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+      .sb-attention-list li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.9rem; }
+      .sb-attention-code { font-family: 'Fraunces', serif; font-weight: 700; }
+      .sb-attention-text { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+      .sb-attention-tag { font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); color: var(--navy); }
+      .sb-attention-list .is-overdue .sb-attention-tag { background: #fbe3e1; border-color: #f3c4c0; color: #b3423a; }
+      .sb-attention-link { margin-left: auto; color: var(--coral); font-weight: 600; font-size: 0.8rem; }
+      .sb-ontrack { background: #e3f1ec; border: 1px solid #bfe0d6; color: #1f5e53; border-radius: 16px; padding: 12px 18px; margin-bottom: 16px; font-size: 0.9rem; }
+
       /* ---------- Small screens ---------- */
       @media (max-width: 900px) {
         .sb-app { grid-template-columns: 1fr; }
@@ -211,6 +223,39 @@
               <% changes.forEach(function (note) { %><li><%= note %></li><% }); %>
             </ul>
           </section>
+        <% } %>
+
+        <!-- Needs attention: overdue tasks, tasks due soon and missed sessions -->
+        <% if (attention && attention.hasItems) { %>
+          <section class="sb-attention" aria-label="Needs attention">
+            <p class="sb-attention-title">NEEDS ATTENTION</p>
+            <ul class="sb-attention-list">
+              <% attention.overdue.forEach(function (item) { %>
+                <li class="is-overdue">
+                  <span class="sb-attention-code"><%= item.subjectCode %></span>
+                  <span class="sb-attention-text" title="<%= item.description %>"><%= item.description %></span>
+                  <span class="sb-attention-tag"><%= item.label %></span>
+                  <a class="sb-attention-link" href="/subjects">Open in Subjects</a>
+                </li>
+              <% }); %>
+              <% attention.dueSoon.forEach(function (item) { %>
+                <li class="is-soon">
+                  <span class="sb-attention-code"><%= item.subjectCode %></span>
+                  <span class="sb-attention-text" title="<%= item.description %>"><%= item.description %></span>
+                  <span class="sb-attention-tag"><%= item.label %></span>
+                  <a class="sb-attention-link" href="/subjects">Open in Subjects</a>
+                </li>
+              <% }); %>
+              <% if (attention.missed.count > 0) { %>
+                <li class="is-missed">
+                  <span class="sb-attention-text"><%= attention.missed.count %> study <%= attention.missed.count === 1 ? 'session' : 'sessions' %> missed in the last 7 days (<%= attention.missed.hours %>h)</span>
+                  <span class="sb-attention-tag">Press Regenerate to reschedule</span>
+                </li>
+              <% } %>
+            </ul>
+          </section>
+        <% } else if (planView.hasPlan) { %>
+          <section class="sb-ontrack">✓ You're on track: nothing is overdue or due in the next 2 days.</section>
         <% } %>
 
         <% if (!planView.hasPlan) { %>
