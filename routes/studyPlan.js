@@ -7,6 +7,7 @@ const {
   showAvailability,
   saveAvailability,
   toggleBlockComplete,
+  saveFocusMinutes,
   exportCalendar,
 } = require('../controllers/studyPlanController');
 
@@ -23,6 +24,9 @@ router.post('/availability', ensureAuth, saveAvailability);
 
 // FR-13: mark a study block done (or undo it).
 router.post('/blocks/:blockId/complete', ensureAuth, toggleBlockComplete);
+
+// Focus Timer: save the minutes studied in one block.
+router.post('/blocks/:blockId/focus', ensureAuth, saveFocusMinutes);
 
 // Sprint 2: download the active plan as a calendar file (.ics).
 router.get('/export.ics', ensureAuth, exportCalendar);
