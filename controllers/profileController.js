@@ -55,4 +55,14 @@ async function updateProfile(req, res, next) {
   }
 }
 
-module.exports = { showProfile, updateProfile };
+async function updateReminders(req, res, next) {
+  try {
+    const remindersEnabled = req.body.remindersEnabled === 'on';
+    await User.findByIdAndUpdate(req.user.id, { remindersEnabled });
+    return res.redirect('/profile?saved=1#reminders');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { showProfile, updateProfile, updateReminders };

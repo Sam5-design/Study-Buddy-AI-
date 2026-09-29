@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
     enum: [30, 60, 90, 120],
     default: 60,
   },
+  // On-screen reminder 15 minutes before a scheduled study block.
+  remindersEnabled: {
+    type: Boolean,
+    default: true,
+  },
 }, {
   timestamps: true,
 });

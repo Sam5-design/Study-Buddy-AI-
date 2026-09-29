@@ -134,6 +134,17 @@
       .sb-attention-link { margin-left: auto; color: var(--coral); font-weight: 600; font-size: 0.8rem; }
       .sb-ontrack { background: #e3f1ec; border: 1px solid #bfe0d6; color: #1f5e53; border-radius: 16px; padding: 12px 18px; margin-bottom: 16px; font-size: 0.9rem; }
 
+
+      .session-reminder { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid #efb8af; border-radius: 15px; background: #fbe3de; color: var(--navy); }
+      .reminder-icon { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 10px; background: rgba(255,253,248,.72); font-size: 16px; }
+      .reminder-copy strong, .reminder-copy span { display: block; }
+      .reminder-copy strong { font-size: .82rem; line-height: 1.25; }
+      .reminder-copy span { margin-top: 3px; color: var(--muted); font-size: .75rem; }
+      .session-reminder time { color: var(--navy); font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; white-space: nowrap; }
+      .session-reminder.is-now { background: #f6d4cf; border-color: #e8a49b; }
+      .session-reminder.is-now .reminder-icon { background: rgba(255,253,248,.82); }
+      @media (max-width: 800px) { .session-reminder { grid-template-columns: auto minmax(0, 1fr); } .session-reminder time { grid-column: 2; margin-top: -6px; font-family: 'DM Sans', sans-serif; font-size: .75rem; } }
+
       /* ---------- Small screens ---------- */
       @media (max-width: 900px) {
         .sb-app { grid-template-columns: 1fr; }
@@ -256,6 +267,17 @@
           </section>
         <% } else if (planView.hasPlan) { %>
           <section class="sb-ontrack">✓ You're on track: nothing is overdue or due in the next 2 days.</section>
+        <% } %>
+
+        <% if (reminder && reminder.shouldShow) { %>
+          <div class="session-reminder <%= reminder.startsNow ? 'is-now' : '' %>" role="status" aria-live="polite" aria-label="Upcoming study session reminder">
+            <span class="reminder-icon" aria-hidden="true">🔔</span>
+            <div class="reminder-copy">
+              <strong><%= reminder.startsNow ? 'Your study session starts now' : 'Study session starts in ' + reminder.minutesUntil + ' minute' + (reminder.minutesUntil === 1 ? '' : 's') %></strong>
+              <span><%= reminder.subjectCode %> · <%= reminder.taskDescription %></span>
+            </div>
+            <time><%= reminder.startTimeLabel %></time>
+          </div>
         <% } %>
 
         <% if (!planView.hasPlan) { %>

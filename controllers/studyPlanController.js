@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Subject = require('../models/Subject');
 const { buildDashboardViewModel } = require('../utils/dashboardViewModel');
 const { buildStreakViewModel } = require('../utils/streakViewModel');
+const { buildSessionReminder } = require('../utils/sessionReminder');
 const StudyPlan = require('../models/StudyPlan');
 const { regeneratePlan, recalculateIfPlanExists } = require('../services/studyPlanService');
 const { buildPlanViewModel } = require('../utils/planViewModel');
@@ -59,6 +60,15 @@ async function showStudyPlan(req, res, next) {
 
     const streaks = buildStreakViewModel({ plan, today });
 
+    const reminder = req.user.remindersEnabled === false
+      ? { shouldShow: false }
+      : buildSessionReminder({
+          planView,
+          studyStartTime: req.user.studyStartTime,
+          now: today,
+          windowMinutes: 15,
+        });
+
     // The "Needs attention" card: overdue tasks, tasks due soon and missed sessions.
     const attention = buildAttention({ upcomingTasks, overdueTasks, planView, today });
 
@@ -68,6 +78,7 @@ async function showStudyPlan(req, res, next) {
       : [];
 
     return res.render('studyPlan/index', {
+      reminder,
       streaks,
       attention,
       planView,

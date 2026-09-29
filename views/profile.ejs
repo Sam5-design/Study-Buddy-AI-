@@ -50,6 +50,21 @@
       .stat { background: var(--sand); border-radius: 14px; padding: 14px; text-align: center; }
       .stat b { display: block; font-family: 'Fraunces', serif; font-size: 1.6rem; }
       .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+      .reminder-setting-row { align-items: flex-start; padding-top: 18px; }
+      .reminder-setting-copy { max-width: 430px; }
+      .reminder-setting-copy span { max-width: 390px; line-height: 1.4; }
+      .reminder-toggle { display: inline-flex; min-width: 116px; height: 46px; align-items: center; justify-content: center; gap: 7px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 50px; background: #eee8df; color: var(--muted); cursor: pointer; font: inherit; }
+      .toggle-state { min-width: 24px; font-size: 9px; font-weight: 700; text-align: center; }
+      .toggle-track { position: relative; display: inline-block; width: 35px; height: 20px; border-radius: 50px; background: #c9c4bc; transition: background .2s ease; }
+      .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fffdf9; box-shadow: 0 1px 3px rgba(20,35,60,.18); transition: transform .2s ease; }
+      .reminder-toggle.is-on .toggle-on { color: var(--green); }
+      .reminder-toggle.is-on .toggle-track { background: var(--green); }
+      .reminder-toggle.is-on .toggle-thumb { transform: translateX(15px); }
+      .reminder-toggle.is-off .toggle-off { color: var(--navy); }
+      .reminder-toggle.is-off .toggle-track { background: #c3beb5; }
+      .reminder-toggle.is-off .toggle-thumb { transform: translateX(0); }
+      .reminder-save { margin-top: 16px; }
+      @media (max-width: 560px) { .reminder-setting-row { align-items: flex-start; } .reminder-toggle { width: 100%; justify-content: space-between; } }
       @media (max-width: 560px) { .row { grid-template-columns: 1fr; gap: 4px; } .stats { grid-template-columns: 1fr; } }
     </style>
   </head>
@@ -112,6 +127,31 @@
           </div>
         </dl>
         <div class="actions"><a class="btn light" href="/study-plan/availability">Edit study settings</a></div>
+
+        <form id="reminders" action="/profile/reminders" method="POST" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line);">
+          <input type="hidden" id="remindersEnabled" name="remindersEnabled" value="<%= user.remindersEnabled !== false ? 'on' : 'off' %>" />
+          <div class="row reminder-setting-row" style="border-top:none;padding-top:0;">
+            <dt>Session reminders</dt>
+            <dd>
+              <div class="reminder-setting-copy">
+                <span class="muted">Show an on-screen reminder 15 minutes before a study session.</span>
+              </div>
+              <button
+                class="reminder-toggle <%= user.remindersEnabled !== false ? 'is-on' : 'is-off' %>"
+                id="reminder-toggle"
+                type="button"
+                aria-pressed="<%= user.remindersEnabled !== false ? 'true' : 'false' %>"
+                aria-label="<%= user.remindersEnabled !== false ? 'Turn session reminders off' : 'Turn session reminders on' %>"
+                style="margin-top:10px;"
+              >
+                <span class="toggle-state toggle-on">ON</span>
+                <span class="toggle-track" aria-hidden="true"><span class="toggle-thumb"></span></span>
+                <span class="toggle-state toggle-off">OFF</span>
+              </button>
+            </dd>
+          </div>
+          <div class="actions reminder-save"><button class="btn light" type="submit">Save reminder setting</button></div>
+        </form>
       </section>
 
       <!-- Totals -->
@@ -132,5 +172,24 @@
         </form>
       </section>
     </main>
+    <script>
+      (function () {
+        var toggle = document.getElementById('reminder-toggle');
+        var remindersEnabled = document.getElementById('remindersEnabled');
+        if (!toggle || !remindersEnabled) return;
+
+        function render(enabled) {
+          toggle.classList.toggle('is-on', enabled);
+          toggle.classList.toggle('is-off', !enabled);
+          toggle.setAttribute('aria-pressed', String(enabled));
+          toggle.setAttribute('aria-label', enabled ? 'Turn session reminders off' : 'Turn session reminders on');
+          remindersEnabled.value = enabled ? 'on' : 'off';
+        }
+
+        toggle.addEventListener('click', function () {
+          render(toggle.getAttribute('aria-pressed') !== 'true');
+        });
+      }());
+    </script>
   </body>
 </html>
