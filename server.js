@@ -1,3 +1,4 @@
+process.env.TZ = 'Australia/Melbourne';
 require('dotenv').config();
 
 const path = require('path');
