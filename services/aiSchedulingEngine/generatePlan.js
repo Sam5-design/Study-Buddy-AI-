@@ -23,6 +23,30 @@ function daysBetween(from, to) {
   return (to.getTime() - from.getTime()) / MS_PER_DAY;
 }
 
+// Unavailable days (Sprint 2, Komal): a calendar day as 'YYYY-MM-DD' in
+// local time, so a date and the same day's study blocks always match.
+function dayId(date) {
+  const d = new Date(date);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+// How many blocked days fall between `from` (included) and `to` (not
+// included). These days can't be used for study, so they are taken off
+// the time a task has left before its deadline.
+function blockedDaysBetween(from, to, blocked) {
+  const firstDay = new Date(from);
+  firstDay.setHours(0, 0, 0, 0);
+  let count = 0;
+  for (const id of blocked) {
+    const [y, m, d] = id.split('-').map(Number);
+    const day = new Date(y, m - 1, d);
+    if (day >= firstDay && day < to) count += 1;
+  }
+  return count;
+}
+
 async function generatePlan({
   tasks,
   availableStudyTimeHours,
@@ -31,6 +55,7 @@ async function generatePlan({
   // original behaviour exactly, so existing callers and tests are unchanged.
   maxSessionHours,   // longest single study session, e.g. 1 -> 1-hour sessions
   firstDayHours,     // hours still free on the first day (e.g. some already studied)
+  unavailableDates,  // days the student can't study (work shifts, holidays); nothing is scheduled on them
 }) {
   if (!Array.isArray(tasks) || tasks.length === 0) {
     throw new Error('At least one task is required to generate a plan.');
@@ -54,10 +79,14 @@ async function generatePlan({
   }
 
   const start = new Date(startDate);
+  const blocked = new Set((Array.isArray(unavailableDates) ? unavailableDates : [])
+    .filter((d) => d && !Number.isNaN(new Date(d).getTime()))
+    .map(dayId));
 
   const scored = tasks.map((task) => {
     const deadline = new Date(task.deadline);
-    const daysUntilDeadline = daysBetween(start, deadline);
+    // Blocked days before the deadline can't be used, so they don't count as spare time.
+    const daysUntilDeadline = daysBetween(start, deadline) - blockedDaysBetween(start, deadline, blocked);
     const daysNeeded = task.estimatedEffortHours / availableStudyTimeHours;
     const slack = daysUntilDeadline - daysNeeded;
     const priorityRank = PRIORITY_RANK[task.priority] ?? PRIORITY_RANK.medium;
@@ -73,12 +102,22 @@ async function generatePlan({
     return a.deadline - b.deadline;
   });
 
-  const firstDay = typeof firstDayHours === 'number'
+  let firstDay = typeof firstDayHours === 'number'
     ? Math.max(0, Math.min(firstDayHours, availableStudyTimeHours))
     : availableStudyTimeHours;
+  if (blocked.has(dayId(start))) firstDay = 0; // no study on a blocked first day
+
+  // Move to the next day the student is free (skips blocked days).
+  const nextFreeDay = (date) => {
+    const next = new Date(date);
+    do {
+      next.setDate(next.getDate() + 1);
+    } while (blocked.has(dayId(next)));
+    return next;
+  };
 
   if (typeof maxSessionHours === 'number' && maxSessionHours > 0) {
-    return { blocks: scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, firstDay }) };
+    return { blocks: scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, firstDay, nextFreeDay, blocked }) };
   }
 
   const blocks = [];
@@ -90,8 +129,7 @@ async function generatePlan({
 
     while (hoursRemaining > 0) {
       if (hoursLeftToday <= 0) {
-        currentDate = new Date(currentDate);
-        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate = nextFreeDay(currentDate);
         hoursLeftToday = availableStudyTimeHours;
       }
 
@@ -123,7 +161,7 @@ async function generatePlan({
  * other task goes next, so subjects are mixed across the day instead of
  * back to back.
  */
-function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, firstDay }) {
+function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSessionHours, firstDay, nextFreeDay, blocked }) {
   const EPSILON = 1e-9;
   const pending = scored.map((item) => ({ ...item, remaining: item.task.estimatedEffortHours }));
 
@@ -133,7 +171,8 @@ function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSession
   let lastTaskToday = null;
 
   const slackOn = (item, date) =>
-    daysBetween(date, item.deadline) - item.remaining / availableStudyTimeHours;
+    daysBetween(date, item.deadline) - blockedDaysBetween(date, item.deadline, blocked)
+    - item.remaining / availableStudyTimeHours;
 
   const compare = (a, b) => {
     if (Math.abs(a.slack - b.slack) > EPSILON) return a.slack - b.slack;
@@ -143,8 +182,7 @@ function scheduleInSessions(scored, { availableStudyTimeHours, start, maxSession
 
   while (pending.some((item) => item.remaining > EPSILON)) {
     if (hoursLeftToday <= EPSILON) {
-      currentDate = new Date(currentDate);
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate = nextFreeDay(currentDate);
       hoursLeftToday = availableStudyTimeHours;
       lastTaskToday = null;
     }

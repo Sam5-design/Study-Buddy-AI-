@@ -60,7 +60,9 @@ app.use(
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    // Falls back to a development-only secret when there is no .env file,
+    // so a fresh clone runs straight away. Set SESSION_SECRET for real use.
+    secret: process.env.SESSION_SECRET || 'study-buddy-dev-secret',
     resave: false,
     saveUninitialized: false
   })

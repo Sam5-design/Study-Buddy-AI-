@@ -43,6 +43,12 @@ const userSchema = new mongoose.Schema({
     enum: [30, 60, 90, 120],
     default: 60,
   },
+  // Days the student can't study (work shifts, holidays, appointments).
+  // Saved as local midnight. The scheduler puts no study on these days.
+  unavailableDates: {
+    type: [Date],
+    default: [],
+  },
   // On-screen reminder 15 minutes before a scheduled study block.
   remindersEnabled: {
     type: Boolean,

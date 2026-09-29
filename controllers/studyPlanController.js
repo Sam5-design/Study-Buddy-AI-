@@ -115,8 +115,43 @@ function showAvailability(req, res) {
     hours: req.user.availableStudyTimeHours || '',
     startTime: req.user.studyStartTime || '18:00',
     sessionLength: req.user.sessionLengthMinutes || 60,
+    unavailableDates: upcomingDateStrings(req.user.unavailableDates),
     error: null,
   });
+}
+
+/**
+ * Unavailable days (Sprint 2, Komal).
+ * The form sends each blocked day as 'YYYY-MM-DD' (one value, or a list).
+ * Turns them into Dates at local midnight, drops anything invalid or in
+ * the past, removes duplicates and sorts them. Kept to 60 days at most.
+ */
+function parseUnavailableDates(raw) {
+  const values = Array.isArray(raw) ? raw : (raw ? [raw] : []);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const seen = new Set();
+  const dates = [];
+  values.forEach((value) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value).trim());
+    if (!match) return;
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    if (Number.isNaN(date.getTime()) || date < today || seen.has(date.getTime())) return;
+    seen.add(date.getTime());
+    dates.push(date);
+  });
+  return dates.sort((a, b) => a - b).slice(0, 60);
+}
+
+// Saved blocked days that are today or later, as 'YYYY-MM-DD' for the form.
+function upcomingDateStrings(dates) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return (dates || [])
+    .map((d) => new Date(d))
+    .filter((d) => d >= today)
+    .sort((a, b) => a - b)
+    .map((d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
 }
 
 /**
@@ -129,6 +164,7 @@ async function saveAvailability(req, res, next) {
     const hours = Number(req.body.availableStudyTimeHours);
     const startTime = String(req.body.studyStartTime || '').trim();
     const sessionLength = Number(req.body.sessionLengthMinutes) || 60;
+    const unavailableDates = parseUnavailableDates(req.body.unavailableDates);
 
     let error = null;
     if (!Number.isFinite(hours) || hours < 0.5 || hours > 16) {
@@ -144,6 +180,7 @@ async function saveAvailability(req, res, next) {
         hours: req.body.availableStudyTimeHours,
         startTime: startTime || '18:00',
         sessionLength,
+        unavailableDates: upcomingDateStrings(unavailableDates),
         error,
       });
     }
@@ -152,6 +189,7 @@ async function saveAvailability(req, res, next) {
       availableStudyTimeHours: hours,
       studyStartTime: startTime,
       sessionLengthMinutes: sessionLength,
+      unavailableDates,
     }, { new: true });
 
     // US6: the plan follows the new settings straight away.
@@ -263,6 +301,7 @@ module.exports = {
   generateStudyPlan,
   showAvailability,
   saveAvailability,
+  parseUnavailableDates,
   toggleBlockComplete,
   saveFocusMinutes,
 };

@@ -130,6 +130,7 @@ async function regeneratePlan(user, { reason = null } = {}) {
         startDate: today,
         maxSessionHours,
         firstDayHours,
+        unavailableDates: user.unavailableDates || [],
       });
     } catch (serviceError) {
       console.error('Scheduling engine failed:', serviceError.message);
