@@ -9,38 +9,171 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your subjects — Study Buddy</title>
     <%- include('_style') %>
+
     <style>
-      .subject-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-      .subject-title { display: flex; align-items: center; gap: 10px; }
-      .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-      .subject-title h2 { margin: 0; font-size: 1.15rem; }
-      .task { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-top: 8px; border-radius: 12px; background: var(--cream); border-left: 5px solid; flex-wrap: wrap; }
-      .task-main { flex: 1 1 220px; min-width: 0; }
-      .task-name { font-weight: 600; }
-      .task.complete .task-name { text-decoration: line-through; opacity: 0.6; }
-      .tag { font-size: 0.7rem; padding: 2px 9px; border-radius: 999px; font-weight: 700; text-transform: capitalize; background: #e3ecf7; color: #2c5d99; }
-      .tag.complete { background: #dff1ec; color: #1f7a6d; }
-      .tag.high { background: #fbe3e1; color: #b3423a; }
-      .tag.low { background: #eef0f3; color: #5d6675; }
-      .empty { text-align: center; padding: 32px 16px; }
+      .subject-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .subject-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .subject-title h2 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+
+      .task {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        margin-top: 8px;
+        border-radius: 12px;
+        background: var(--cream);
+        border-left: 5px solid;
+        flex-wrap: wrap;
+      }
+
+      .task-main {
+        flex: 1 1 220px;
+        min-width: 0;
+      }
+
+      .task-name {
+        font-weight: 600;
+      }
+
+      .task.complete .task-name {
+        text-decoration: line-through;
+        opacity: 0.6;
+      }
+
+      .tag {
+        font-size: 0.7rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-weight: 700;
+        text-transform: capitalize;
+        background: #e3ecf7;
+        color: #2c5d99;
+      }
+
+      .tag.complete {
+        background: #dff1ec;
+        color: #1f7a6d;
+      }
+
+      .tag.high {
+        background: #fbe3e1;
+        color: #b3423a;
+      }
+
+      .tag.low {
+        background: #eef0f3;
+        color: #5d6675;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 32px 16px;
+      }
+
+      .task-filters {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 10px;
+        margin: 18px 0;
+      }
+
+      .task-filters input,
+      .task-filters select {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        font: inherit;
+        background: #fff;
+        color: var(--navy);
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      @media (max-width: 600px) {
+        .task-filters {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
+
   <body>
     <main class="wrap">
       <a class="back" href="/study-plan">← Back to dashboard</a>
+
       <h1>Your subjects</h1>
-      <p class="muted">Edit or delete your subjects and tasks. Your study plan updates automatically.</p>
+
+      <p class="muted">
+        Edit or delete your subjects and tasks. Your study plan updates automatically.
+      </p>
 
       <% if (message) { %>
         <div class="msg">
           ✓ <%= message %>
-          <% if (recalculated) { %> Your study plan was updated. <a href="/study-plan?regenerated=1">See what changed →</a><% } %>
+          <% if (recalculated) { %>
+            Your study plan was updated.
+            <a href="/study-plan?regenerated=1">See what changed →</a>
+          <% } %>
         </div>
       <% } %>
 
-      <div class="actions" style="margin-top:16px;">
+      <div class="actions" style="margin-top: 16px;">
         <a class="btn" href="/subjects/new">+ Add a subject</a>
       </div>
+
+      <div class="task-filters">
+        <input
+          id="taskSearch"
+          type="search"
+          placeholder="Search tasks or subjects"
+          aria-label="Search tasks by task name or subject"
+        />
+
+        <select id="priorityFilter" aria-label="Filter tasks by priority">
+          <option value="all">All priorities</option>
+          <option value="low">Low priority</option>
+          <option value="medium">Medium priority</option>
+          <option value="high">High priority</option>
+        </select>
+
+        <select id="statusFilter" aria-label="Filter tasks by status">
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="complete">Complete</option>
+          <option value="missed">Missed</option>
+        </select>
+      </div>
+
+      <p id="noTaskResults" class="muted" hidden>
+        No tasks match your search and filters.
+      </p>
 
       <% if (!subjects.length) { %>
         <section class="card empty">
@@ -52,54 +185,117 @@
       <% subjects.forEach(function (subject) {
            var tasks = tasksBySubject[String(subject._id)] || [];
       %>
-        <section class="card">
+        <section class="card" data-subject-card>
           <div class="subject-head">
             <div class="subject-title">
-              <span class="dot" style="background: <%= subject.colour %>;"></span>
+              <span class="dot" data-colour="<%= subject.colour %>"></span>
+
               <div>
                 <h2><%= subject.code %> · <%= subject.name %></h2>
-                <div class="muted"><%= subject.trimester %> · <%= tasks.length %> <%= tasks.length === 1 ? 'task' : 'tasks' %></div>
+
+                <div class="muted">
+                  <%= subject.trimester %> ·
+                  <%= tasks.length %>
+                  <%= tasks.length === 1 ? 'task' : 'tasks' %>
+                </div>
               </div>
             </div>
+
             <div class="actions">
-              <a class="btn light small" href="/subjects/<%= subject._id %>/tasks/new">+ Task</a>
-              <a class="btn light small" href="/subjects/<%= subject._id %>/edit">Edit</a>
-              <form action="/subjects/<%= subject._id %>/delete" method="POST"
-                    onsubmit="return confirm('Delete <%= subject.code %> and all <%= tasks.length %> of its tasks? This cannot be undone.');">
+              <a
+                class="btn light small"
+                href="/subjects/<%= subject._id %>/tasks/new"
+              >+ Task</a>
+
+              <a
+                class="btn light small"
+                href="/subjects/<%= subject._id %>/edit"
+              >Edit</a>
+
+              <form
+                action="/subjects/<%= subject._id %>/delete"
+                method="POST"
+                onsubmit="return confirm('Delete <%= subject.code %> and all <%= tasks.length %> of its tasks? This cannot be undone.');"
+              >
                 <button class="btn danger small" type="submit">Delete</button>
               </form>
             </div>
           </div>
 
           <% if (!tasks.length) { %>
-            <p class="muted" style="margin:12px 0 0;">No tasks yet.</p>
+            <p class="muted" style="margin: 12px 0 0;">
+              No tasks yet.
+            </p>
           <% } %>
 
           <% tasks.forEach(function (task) { %>
-            <div class="task <%= task.status %>" style="border-left-color: <%= subject.colour %>;">
+            <div
+              class="task <%= task.status %>"
+              data-task-row
+              data-search="<%= (task.description + ' ' + subject.name + ' ' + subject.code).toLowerCase() %>"
+              data-priority="<%= task.priority %>"
+              data-status="<%= task.status %>"
+              data-colour="<%= subject.colour %>"
+            >
               <div class="task-main">
                 <div class="task-name">
                   <%= task.description %>
-                  <% if (task.notes || (task.links && task.links.length)) { %><span title="Has notes or links">📝</span><% } %>
-                  <% if (task.recurrenceGroupId) { %><span title="Repeats weekly">🔁</span><% } %>
+
+                  <% if (task.notes || (task.links && task.links.length)) { %>
+                    <span title="Has notes or links">📝</span>
+                  <% } %>
+
+                  <% if (task.recurrenceGroupId) { %>
+                    <span title="Repeats weekly">🔁</span>
+                  <% } %>
                 </div>
-                <div class="muted" style="font-size:0.8rem;">
-                  Due <%= new Date(task.deadline).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) %>
+
+                <div class="muted" style="font-size: 0.8rem;">
+                  Due
+                  <%= new Date(task.deadline).toLocaleDateString('en-AU', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short'
+                  }) %>
                   · <%= task.estimatedEffortHours %>h
                 </div>
               </div>
-              <span class="tag <%= task.priority %>"><%= task.priority %></span><% if (task.isExam) { %> <span class="tag">exam</span><% } %>
-              <span class="tag <%= task.status %>"><%= task.status %></span>
+
+              <span class="tag <%= task.priority %>">
+                <%= task.priority %>
+              </span>
+
+              <% if (task.isExam) { %>
+                <span class="tag">exam</span>
+              <% } %>
+
+              <span class="tag <%= task.status %>">
+                <%= task.status %>
+              </span>
+
               <div class="actions">
-                <a class="btn light small" href="/subjects/<%= subject._id %>/tasks/<%= task._id %>/edit">Edit</a>
-                <form action="/subjects/<%= subject._id %>/tasks/<%= task._id %>/delete" method="POST"
-                      onsubmit="return confirm('Delete this task? This cannot be undone.');">
+                <a
+                  class="btn light small"
+                  href="/subjects/<%= subject._id %>/tasks/<%= task._id %>/edit"
+                >Edit</a>
+
+                <form
+                  action="/subjects/<%= subject._id %>/tasks/<%= task._id %>/delete"
+                  method="POST"
+                  onsubmit="return confirm('Delete this task? This cannot be undone.');"
+                >
                   <button class="btn danger small" type="submit">Delete</button>
                 </form>
+
                 <% if (task.recurrenceGroupId) { %>
-                  <form action="/subjects/<%= subject._id %>/tasks/<%= task._id %>/delete-series" method="POST"
-                        onsubmit="return confirm('Delete every repeat of this task? This cannot be undone.');">
-                    <button class="btn danger small" type="submit">Delete all repeats</button>
+                  <form
+                    action="/subjects/<%= subject._id %>/tasks/<%= task._id %>/delete-series"
+                    method="POST"
+                    onsubmit="return confirm('Delete every repeat of this task? This cannot be undone.');"
+                  >
+                    <button class="btn danger small" type="submit">
+                      Delete all repeats
+                    </button>
                   </form>
                 <% } %>
               </div>
@@ -108,5 +304,66 @@
         </section>
       <% }); %>
     </main>
+
+    <script>
+      document.querySelectorAll('.dot[data-colour]').forEach((element) => {
+        element.style.backgroundColor = element.dataset.colour;
+      });
+
+      document.querySelectorAll('.task[data-colour]').forEach((element) => {
+        element.style.borderLeftColor = element.dataset.colour;
+      });
+
+      const searchInput = document.getElementById('taskSearch');
+      const priorityFilter = document.getElementById('priorityFilter');
+      const statusFilter = document.getElementById('statusFilter');
+      const noResults = document.getElementById('noTaskResults');
+
+      function filterTasks() {
+        const query = searchInput.value.trim().toLowerCase();
+        const selectedPriority = priorityFilter.value;
+        const selectedStatus = statusFilter.value;
+
+        const isFiltering =
+          query !== '' ||
+          selectedPriority !== 'all' ||
+          selectedStatus !== 'all';
+
+        let visibleTaskCount = 0;
+
+        document.querySelectorAll('[data-subject-card]').forEach((card) => {
+          const tasks = card.querySelectorAll('[data-task-row]');
+          let visibleTasksInCard = 0;
+
+          tasks.forEach((task) => {
+            const matchesSearch = task.dataset.search.includes(query);
+            const matchesPriority =
+              selectedPriority === 'all' ||
+              task.dataset.priority === selectedPriority;
+            const matchesStatus =
+              selectedStatus === 'all' ||
+              task.dataset.status === selectedStatus;
+
+            const matches =
+              matchesSearch && matchesPriority && matchesStatus;
+
+            task.hidden = !matches;
+
+            if (matches) {
+              visibleTasksInCard += 1;
+              visibleTaskCount += 1;
+            }
+          });
+
+          card.hidden = isFiltering && visibleTasksInCard === 0;
+        });
+
+        noResults.hidden = !isFiltering || visibleTaskCount > 0;
+      }
+
+      searchInput.addEventListener('input', filterTasks);
+      priorityFilter.addEventListener('change', filterTasks);
+      statusFilter.addEventListener('change', filterTasks);
+    </script>
   </body>
 </html>

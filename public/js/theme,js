@@ -1,0 +1,34 @@
+(function () {
+  const storageKey = "study-buddy-theme";
+  const savedTheme = localStorage.getItem(storageKey) || "light";
+
+  document.documentElement.dataset.theme = savedTheme;
+
+  function updateButton() {
+    const button = document.getElementById("themeToggle");
+    if (!button) return;
+
+    const isDark = document.documentElement.dataset.theme === "dark";
+    button.textContent = isDark ? "Light mode" : "Dark mode";
+    button.setAttribute(
+      "aria-label",
+      isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    updateButton();
+
+    const button = document.getElementById("themeToggle");
+    if (!button) return;
+
+    button.addEventListener("click", function () {
+      const isDark = document.documentElement.dataset.theme === "dark";
+      const newTheme = isDark ? "light" : "dark";
+
+      document.documentElement.dataset.theme = newTheme;
+      localStorage.setItem(storageKey, newTheme);
+      updateButton();
+    });
+  });
+})();

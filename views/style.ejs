@@ -1,0 +1,61 @@
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg: #f7f8fa;
+    --surface: #ffffff;
+    --text: #20242c;
+    --muted: #687080;
+    --border: #dfe3e8;
+    --input-bg: #ffffff;
+    --button-bg: #315da8;
+    --button-text: #ffffff;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg: #151922;
+    --surface: #202632;
+    --text: #edf1f7;
+    --muted: #abb4c2;
+    --border: #3a4351;
+    --input-bg: #252d39;
+    --button-bg: #7899e8;
+    --button-text: #101522;
+  }
+
+  body {
+    background: var(--page-bg);
+    color: var(--text);
+  }
+
+  .card,
+  .panel,
+  header,
+  nav,
+  aside,
+  section {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  p,
+  .muted,
+  label {
+    color: var(--muted);
+  }
+
+  input,
+  select,
+  textarea {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  button,
+  .btn {
+    background: var(--button-bg);
+    color: var(--button-text);
+  }
+</style>

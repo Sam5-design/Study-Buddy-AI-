@@ -191,5 +191,68 @@
         });
       }());
     </script>
+    <script src="/js/theme.js" defer></script>
+    <section class="card">
+  <p class="label">CHANGE PASSWORD</p>
+
+  <% if (typeof passwordStatus !== 'undefined' && passwordStatus === 'changed') { %>
+    <div class="msg ok">Your password has been changed.</div>
+  <% } %>
+
+  <% if (typeof passwordStatus !== 'undefined' && passwordStatus === 'incorrect') { %>
+    <div class="msg err">Your current password is incorrect.</div>
+  <% } %>
+
+  <% if (typeof passwordStatus !== 'undefined' && passwordStatus === 'mismatch') { %>
+    <div class="msg err">The new passwords do not match.</div>
+  <% } %>
+
+  <% if (typeof passwordStatus !== 'undefined' && passwordStatus === 'weak') { %>
+    <div class="msg err">Your new password must be at least 8 characters.</div>
+  <% } %>
+
+  <% if (typeof passwordStatus !== 'undefined' && passwordStatus === 'missing') { %>
+    <div class="msg err">Complete all password fields.</div>
+  <% } %>
+
+  <form action="/profile/password" method="POST">
+    <p>
+      <label for="currentPassword">Current password</label>
+      <input
+        id="currentPassword"
+        name="currentPassword"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+    </p>
+
+    <p>
+      <label for="newPassword">New password</label>
+      <input
+        id="newPassword"
+        name="newPassword"
+        type="password"
+        autocomplete="new-password"
+        minlength="8"
+        required
+      />
+    </p>
+
+    <p>
+      <label for="confirmPassword">Confirm new password</label>
+      <input
+        id="confirmPassword"
+        name="confirmPassword"
+        type="password"
+        autocomplete="new-password"
+        minlength="8"
+        required
+      />
+    </p>
+
+    <button class="btn" type="submit">Update password</button>
+  </form>
+</section>
   </body>
 </html>

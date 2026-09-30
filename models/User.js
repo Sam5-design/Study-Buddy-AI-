@@ -49,6 +49,14 @@ const userSchema = new mongoose.Schema({
     type: [Date],
     default: [],
   },
+  passwordResetTokenHash: {
+  type: String,
+  default: null,
+},
+passwordResetExpiresAt: {
+  type: Date,
+  default: null,
+},
   // On-screen reminder 15 minutes before a scheduled study block.
   remindersEnabled: {
     type: Boolean,

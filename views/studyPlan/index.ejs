@@ -12,9 +12,12 @@
   function ring(percent, colour, size) {
     size = size || 64;
     var inner = Math.round(size * 0.72);
-    return '<div class="sb-ring" style="width:' + size + 'px;height:' + size + 'px;background:conic-gradient(' +
-      (colour || 'var(--coral)') + ' ' + percent + '%, #ddd4c7 0);">' +
-      '<span style="width:' + inner + 'px;height:' + inner + 'px;">' + percent + '%</span></div>';
+    return '<div class="sb-ring"' +
+      ' data-ring-size="' + size + '"' +
+      ' data-ring-inner="' + inner + '"' +
+      ' data-ring-colour="' + (colour || 'var(--coral)') + '"' +
+      ' data-ring-percent="' + percent + '">' +
+      '<span>' + percent + '%</span></div>';
   }
   var displayName = (user && (user.fullName || user.email)) || 'Student';
   var initials = displayName.split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
@@ -25,6 +28,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your Study Plan — Study Buddy</title>
+    <script>
+      try {
+        if (localStorage.getItem('study-buddy-theme') === 'dark') {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      } catch (error) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -41,6 +51,7 @@
         --line: #e4ddd2;
         --muted: #7a8494;
         --green: #2e9e8f;
+        --ring-track: #ddd4c7;
       }
       * { box-sizing: border-box; }
       body { margin: 0; font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--navy); }
@@ -151,11 +162,25 @@
         .sb-side { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px; }
         .sb-nav { flex-direction: row; flex-wrap: wrap; }
         .sb-nav a { padding: 8px 12px; }
+        .sb-theme-toggle { width:auto; padding:8px 12px; }
         .sb-avail { display: none; }
         .sb-logout { margin-top: 0; margin-left: auto; }
         .sb-main { padding: 20px 16px 40px; }
         .sb-bottom { grid-template-columns: 1fr; }
       }
+
+      /* Theme toggle */
+      .sb-theme-toggle { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--navy); font:inherit; font-weight:600; text-align:left; cursor:pointer; }
+      /* Dark theme */
+      html[data-theme="dark"] { color-scheme:dark; --navy:#edf2fa; --coral:#f08076; --cream:#151b27; --sand:#202938; --card:#242e3d; --line:#3d4858; --muted:#b7c1d1; --green:#62c5ad; --ring-track:#465366; }
+      html[data-theme="dark"] body { background:var(--cream); color:var(--navy); }
+      html[data-theme="dark"] .sb-side, html[data-theme="dark"] .sb-stat { background:var(--sand); }
+      html[data-theme="dark"] .sb-card, html[data-theme="dark"] .sb-upcoming-card, html[data-theme="dark"] .sb-menu { background:var(--card); border-color:var(--line); }
+      html[data-theme="dark"] .sb-pill:not(.primary) { background:var(--card); color:var(--navy); }
+      html[data-theme="dark"] .sb-nav a.active { background:#493338; }
+      html[data-theme="dark"] .sb-nav a:hover { background:#303c4d; }
+      html[data-theme="dark"] .sb-changes, html[data-theme="dark"] .sb-ontrack { background:#203b37; border-color:#315e54; color:#b9e8d9; }
+      html[data-theme="dark"] .sb-attention, html[data-theme="dark"] .session-reminder { background:#3b2c32; border-color:#69444c; }
     </style>
   </head>
   <body>
@@ -173,6 +198,7 @@
           <a href="/study-plan/availability">◷ Study time</a>
           <a href="/progress">↗ Progress</a>
           <a href="/profile">👤 Profile</a>
+          <button id="themeToggle" class="sb-theme-toggle" type="button" aria-pressed="false">Dark mode</button>
         </nav>
 
         <div class="sb-avail">
@@ -219,8 +245,8 @@
         <div class="sb-subjects">
           <span class="sb-side-label" style="margin:0">YOUR SUBJECTS</span>
           <% subjects.forEach(function (subject) { %>
-            <a class="sb-chip" href="/subjects" title="<%= subject.name %>: edit or delete" style="background: <%= tint(subject.colour, '33') %>;">
-              <i style="background: <%= subject.colour %>;"></i><%= subject.code || subject.name %>
+            <a class="sb-chip" href="/subjects" title="<%= subject.name %>: edit or delete" data-chip-bg="<%= tint(subject.colour, '33') %>">
+              <i data-subject-colour="<%= subject.colour %>"></i><%= subject.code || subject.name %>
             </a>
           <% }); %>
           <a href="/subjects/new" class="sb-chip sb-chip-add">+ Add</a>
@@ -383,7 +409,7 @@
               <p class="sb-side-label">UPCOMING DEADLINES BY SUBJECT</p>
               <div class="sb-upcoming-grid">
                 <% dashboard.subjectDeadlines.forEach(function (item) { %>
-                  <div class="sb-upcoming-card" style="border-top-color: <%= item.subjectColour %>;">
+                  <div class="sb-upcoming-card" data-border-colour="<%= item.subjectColour %>">
                     <%- ring(item.percentDone, item.subjectColour, 56) %>
                     <div style="min-width:0">
                       <div class="sb-upcoming-code"><%= item.subjectCode %></div>
@@ -405,6 +431,53 @@
     </div>
 
     <script>
+      // Apply EJS-provided visual values without dynamic inline CSS.
+      document.querySelectorAll('.sb-ring[data-ring-size]').forEach(function (ring) {
+        var size = Number(ring.dataset.ringSize);
+        var innerSize = Number(ring.dataset.ringInner);
+        var percent = Number(ring.dataset.ringPercent);
+        ring.style.width = size + 'px';
+        ring.style.height = size + 'px';
+        ring.style.background = 'conic-gradient(' + ring.dataset.ringColour + ' ' +
+          percent + '%, var(--ring-track) 0)';
+        var label = ring.querySelector('span');
+        if (label) {
+          label.style.width = innerSize + 'px';
+          label.style.height = innerSize + 'px';
+        }
+      });
+      document.querySelectorAll('[data-chip-bg]').forEach(function (el) {
+        el.style.backgroundColor = el.dataset.chipBg;
+      });
+      document.querySelectorAll('[data-subject-colour]').forEach(function (el) {
+        el.style.backgroundColor = el.dataset.subjectColour;
+      });
+      document.querySelectorAll('[data-border-colour]').forEach(function (el) {
+        el.style.borderTopColor = el.dataset.borderColour;
+      });
+
+      // Remember and toggle the page theme.
+      var themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        function updateThemeToggle() {
+          var isDark = document.documentElement.dataset.theme === 'dark';
+          themeToggle.textContent = isDark ? 'Light mode' : 'Dark mode';
+          themeToggle.setAttribute('aria-pressed', String(isDark));
+        }
+        updateThemeToggle();
+        themeToggle.addEventListener('click', function () {
+          var isDark = document.documentElement.dataset.theme === 'dark';
+          if (isDark) {
+            delete document.documentElement.dataset.theme;
+            localStorage.setItem('study-buddy-theme', 'light');
+          } else {
+            document.documentElement.dataset.theme = 'dark';
+            localStorage.setItem('study-buddy-theme', 'dark');
+          }
+          updateThemeToggle();
+        });
+      }
+
       // Close the profile menu when clicking anywhere else on the page.
       document.addEventListener('click', function (event) {
         var menu = document.querySelector('.sb-profile');
@@ -435,5 +508,7 @@
         });
       }
     </script>
+    <script src="/js/theme.js" defer></script>
   </body>
 </html>
+
