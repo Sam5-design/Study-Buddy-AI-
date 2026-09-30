@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Subject = require('../models/Subject');
 const Task = require('../models/Task');
+const bcrypt = require('bcrypt');
 
 /**
  * GET /profile
@@ -19,6 +20,7 @@ async function showProfile(req, res, next) {
       stats: { subjectCount, taskCount, completedCount },
       saved: req.query.saved === '1',
       error: null,
+      passwordStatus: req.query.password || null,
     });
   } catch (error) {
     return next(error);
@@ -64,5 +66,48 @@ async function updateReminders(req, res, next) {
     return next(error);
   }
 }
+async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
-module.exports = { showProfile, updateProfile, updateReminders };
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.redirect('/profile?password=missing');
+    }
+
+    if (newPassword.length < 8) {
+      return res.redirect('/profile?password=weak');
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.redirect('/profile?password=mismatch');
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.redirect('/login');
+    }
+
+    const currentPasswordMatches = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+
+    if (!currentPasswordMatches) {
+      return res.redirect('/profile?password=incorrect');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return res.redirect('/profile?password=changed');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = {
+  showProfile,
+  updateProfile,
+  updateReminders,
+  changePassword,
+};

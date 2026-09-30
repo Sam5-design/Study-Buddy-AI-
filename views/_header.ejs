@@ -6,10 +6,14 @@
 
   <div class="sb-user" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding-right:8px;">
     <a href="/study-plan" class="sb-text-link" style="font-weight:600;">← Dashboard</a>
+    <button id="themeToggle" type="button" aria-label="Switch to dark mode">
+  Dark mode
+</button>
     <a href="/profile" class="sb-avatar" title="Personal details" style="text-decoration:none;">SB</a>
     <span><%= currentUser && (currentUser.name || currentUser.fullName || currentUser.email) ? (currentUser.name || currentUser.fullName || currentUser.email) : 'User' %></span>
     <form action="/logout" method="POST" style="display:inline; margin:0;">
       <button type="submit" class="sb-text-link" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;text-decoration:underline;">Log out</button>
     </form>
   </div>
+  <script src="/js/theme.js" defer></script>
 </header>
